@@ -1,4 +1,5 @@
 # Scripts for solving one-to-one matching models
+This script implement in JAX a fixed point iteration algorithm to solve a class of one-to-one matching model with linear transfers.
 
 # Citations
 If you use this script in your research, I ask that you also cite [Andersen (2024)](https://arxiv.org/pdf/2409.05518).
