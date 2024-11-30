@@ -9,11 +9,8 @@ jax.config.update("jax_enable_x64", True)
 # import simple_pytree (used to store variables)
 from simple_pytree import Pytree, dataclass, field, static_field
 
-# import discrete-choice models
-from ChoiceProbabilities import Logit, GNLogit
-
-# import discrete-choice models
-from SolveMatchingModel import EndogenousVariables
+# import solver for one-to-one matching model
+from SolveOneToOneMatching.SolveOneToOneMatching import Logit, GNLogit, EndogenousVariables
 
 # Print numbers with 3 decimals
 jnp.set_printoptions(precision=3)
