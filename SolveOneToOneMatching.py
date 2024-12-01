@@ -95,7 +95,8 @@ def EndogenousVariables(cX: jnp.ndarray,
                         cY: jnp.ndarray, 
                         probX_vX: callable, 
                         probY_vY: callable, 
-                        exog: Pytree) -> Pytree:
+                        exog: Pytree,
+                        accelerator: str = "None") -> Pytree:
     """Solves the matching model for a given specification of the choice
     probabilities (probX_vX) and (probY_vY) and exogenous variables (exog).
 
@@ -125,7 +126,7 @@ def EndogenousVariables(cX: jnp.ndarray,
     @dataclass
     class Endog(Pytree, mutable=True):
         # Find the equilibrium transfer by fixed point iterations
-        transfer = FixedPointRoot(fxp, transfer_init, acceleration="SQUAREM")[0]
+        transfer = FixedPointRoot(fxp, transfer_init, acceleration=accelerator)[0]
 
         # Calculate the choice probabilities of the workers' (pX) and firms' (pY)
         probX = probX_T(transfer)

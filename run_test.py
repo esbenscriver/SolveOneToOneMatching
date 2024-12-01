@@ -118,6 +118,10 @@ print(f"{exog.nestingParameterY.shape = }")
 print(f"{exog.nestingDegreeX.shape = }")
 print(f"{exog.nestingDegreeY.shape = }")
 
+# Choose accelerator for solving system of fixed point equations
+accelerator = "None" # solve by standard fixed point iterations
+accelerator = "SQUAREM" # use the SQUAREM algorithm to speed up convergence
+
 # Set scalars for dampening the step length for the logit model
 cX_logit = 1.0
 cY_logit = 1.0
@@ -134,7 +138,8 @@ endog_logit = EndogenousVariables(cX_logit,
                                   cY_logit,
                                   probX_logit,
                                   probY_logit,
-                                  exog)
+                                  exog,
+                                  accelerator=accelerator)
 
 # Set scalars for dampening the step length for the nested logit model
 cX_nested_logit = jnp.sum(exog.nestingX * exog.nestingParameterX, axis=2)
@@ -158,7 +163,8 @@ endog_nested_logit = EndogenousVariables(cX_nested_logit,
                                          cY_nested_logit,
                                          probX_nested_logit,
                                          probY_nested_logit,
-                                         exog)
+                                         exog,
+                                         accelerator=accelerator)
 
 # Set scalars for dampening the step length for the nested logit model
 cX_GNLogit = jnp.min(jnp.squeeze(exog.nestingParameterX), axis=exog.axisX, keepdims=True)
@@ -182,4 +188,5 @@ endog_GNLogit = EndogenousVariables(cX_GNLogit,
                                     cY_GNLogit,
                                     probX_GNLogit,
                                     probY_GNLogit,
-                                    exog)
+                                    exog,
+                                    accelerator=accelerator)
