@@ -21,8 +21,8 @@ If you use this script in your research, I ask that you also cite [Andersen (202
     }
 
 # Installation
-In order to run the scripts, you need to have installed JAX and my implementation in JAX of a fixed point iteration algorithm called FixedPointJAX. This implementation allow the user to solve the system of fixed point equations by standard fixed point iterations and the SQUAREM accelerator, see [Du and Varadhan (2020)](https://www.jstatsoft.org/article/view/v092i07).
+In order to run the scripts, you need to have installed JAX and my implementation in [JAX](https://pypi.org/project/jax/) of a fixed point iteration algorithm called FixedPointJAX. This implementation allow the user to solve the system of fixed point equations by standard fixed point iterations and the SQUAREM accelerator, see [Du and Varadhan (2020)](https://www.jstatsoft.org/article/view/v092i07).
 
-You can install the current release of FixedPointJAX with [pip](https://pypi.org/project/FixedPointJAX/)
+You can install the current release of [FixedPointJAX](https://pypi.org/project/FixedPointJAX/) with pip
 
     pip install FixedPointJAX
