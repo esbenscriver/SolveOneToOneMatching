@@ -1,12 +1,5 @@
-<div align="center">
-
-# Note on solving one-to-one matching models with linear transferable utility
-
-Esben Scriver Andersen
 
 [![arXiv](https://img.shields.io/badge/arXiv-2112.14377-b31b1b.svg)](https://arxiv.org/pdf/2409.05518)
-
-</div>
 
 # Description
 This script implement in JAX a fixed point iteration algorithm to solve a class of one-to-one matching model with linear transfers.
