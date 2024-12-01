@@ -23,11 +23,11 @@ If you use this script in your research, I ask that you also cite [Andersen (202
 # Installation
 In order to run the scripts, you need to have installed JAX, Simple Pytree, and FixedPointJAX. The latter is an implementation of a fixed point iteration algorithm that allow the user to solve the system of fixed point equations by standard fixed point iterations and the SQUAREM accelerator, see [Du and Varadhan (2020)](https://www.jstatsoft.org/article/view/v092i07).
 
-You can install the current release of [FixedPointJAX](https://pypi.org/project/FixedPointJAX/) with pip
+You can install the current release of [FixedPointJAX](https://github.com/esbenscriver/FixedPointJAX) with pip
 
     pip install FixedPointJAX
     
-You can install the current release of [JAX](https://github.com/esbenscriver/FixedPointJAX) with pip
+You can install the current release of [JAX](https://jax.readthedocs.io/en/latest/quickstart.html) with pip
 
     pip install jax
 
