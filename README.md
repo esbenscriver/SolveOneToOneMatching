@@ -1,4 +1,14 @@
-# Scripts for solving one-to-one matching models
+<div align="center">
+
+# Note on solving one-to-one matching models with linear transferable utility
+
+Esben Scriver Andersen
+
+[![arXiv](https://img.shields.io/badge/arXiv-2112.14377-b31b1b.svg)](https://arxiv.org/pdf/2409.05518)
+
+</div>
+
+# Description
 This script implement in JAX a fixed point iteration algorithm to solve a class of one-to-one matching model with linear transfers.
 
 The main script is SolveOneToOneMatching.py that sets up and solves a general system of fixed point equations for the set of equilibrium transfers in a one-to-one matching model. The script run_test.py uses the main script to solve three special cases of one-to-one matching models, where the discrete choices of the agents on both sides of the matching market are described by the
