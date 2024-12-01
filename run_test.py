@@ -10,10 +10,7 @@ jax.config.update("jax_enable_x64", True)
 from simple_pytree import Pytree, dataclass, field, static_field
 
 # import solver for one-to-one matching model
-from SolveOneToOneMatching.SolveOneToOneMatching import Logit, GNLogit, EndogenousVariables
-
-# Print numbers with 3 decimals
-jnp.set_printoptions(precision=3)
+from SolveOneToOneMatching import Logit, GNLogit, EndogenousVariables
 
 def SimulateDummyMatrix(key: int, nests: jnp.ndarray, types: int, axis: int):
   """Simulate matrix describing the nesting structure of the nested logit model
