@@ -1,14 +1,140 @@
 import jax.numpy as jnp
 
 # import simple_pytree (used to store variables)
-from simple_pytree import Pytree, dataclass, field, static_field
+from simple_pytree import Pytree, dataclass
 
 # import fixed-point iterator
 from FixedPointJAX import FixedPointRoot
 
 # JAX code to solve a one-to-one matching model with transferable utility
 
-def Logit(v: jnp.ndarray, axis: int = 0, outside: bool = True) -> jnp.ndarray:
+@dataclass
+class ExogenousVariables(Pytree, mutable=False):
+    # Set axis describing the alternatives of workers (axisX) and firms (axisY)
+    axisX: int
+    axisY: int
+
+    # Distribution of workers (nX) and firms(nY)
+    nX: jnp.ndarray
+    nY: jnp.ndarray
+
+    # Choice-specific utilities of workers (utilityX) and firms(utilityY)
+    utilityX: jnp.ndarray 
+    utilityY: jnp.ndarray 
+
+    # Scale parameters of workers (scaleX) and firms(scaleY)
+    scaleX: jnp.ndarray
+    scaleY: jnp.ndarray
+
+    @property
+    def numberOfTypeX(self) -> int:
+        return self.nX.size
+    
+    @property
+    def numberOfTypeY(self) -> int:
+        return self.nY.size
+
+@dataclass
+class EndogenousVariables(Pytree, mutable=True):
+    # Find the equilibrium transfer by fixed point iterations
+    transfers: jnp.ndarray
+
+    # Calculate the choice probabilities of the workers' (pX) and firms' (pY)
+    prob_matched_X: jnp.ndarray
+    prob_matched_Y: jnp.ndarray
+
+    # Calculate the choice probabilities for the outside options
+    prob_unmatched_X: jnp.ndarray
+    prob_unmatched_Y: jnp.ndarray
+
+    # Calculate the equilibrium distribution of the matches
+    matched: jnp.ndarray
+
+    # Calculate the unmatched workers and firms
+    unmatched_X: jnp.ndarray
+    unmatched_Y: jnp.ndarray
+
+@dataclass
+class MatchingModel(Pytree, mutable=True):
+    exog: ExogenousVariables
+
+    prob_X: callable
+    prob_Y: callable
+
+    cX: float = 1.0
+    cY: float = 1.0
+
+    endog: EndogenousVariables|None = None
+    K: jnp.ndarray|None = None
+
+    def SetAdjustmentLength(self) -> None:
+        self.K = (self.cX * self.exog.scaleX * self.cY * self.exog.scaleY) / (self.cX * self.exog.scaleX + self.cY * self.exog.scaleY)
+
+    def prob_transfer_X(self, transfers: jnp.ndarray) -> jnp.ndarray:
+        return self.prob_X((self.exog.utilityX + transfers) / self.exog.scaleX)
+        
+    def prob_transfer_Y(self, transfers: jnp.ndarray) -> jnp.ndarray:
+        return self.prob_Y((self.exog.utilityY - transfers) / self.exog.scaleY)
+
+    def UpdateTransfers(self, t_initial: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+        """Calculates excess demand and updates fixed point equation for transfers
+
+            Inputs:
+            - t_initial: array containing initial transfers
+
+            Outputs:
+            - t_updated: array containing the updated transfers
+            - logratio: array containing the log-ratio of excess demand
+        """
+        # Calculate firms' demand and workers' supply
+        nXpX = self.exog.nX * self.prob_transfer_X(t_initial) # Workers' supply to firms
+        nYpY = self.exog.nY * self.prob_transfer_Y(t_initial) # Firms' demand for workers
+
+        # Calculate the log-ratio of firms' demand and workers' supply
+        logratio = jnp.log(nYpY / nXpX)
+
+        # Update transfer
+        t_updated = t_initial + self.K * logratio
+        return t_updated, logratio
+
+    def Solve(self, acceleration: str = "None") -> None:
+        """ Solve equilibrium transfers of matching model and store endogenous variables"""
+        
+        #Set adjustment length of fixed-point iterator
+        self.SetAdjustmentLength()
+        
+        # Initial guess for transfer
+        transfers_init = jnp.zeros((self.exog.numberOfTypeX, self.exog.numberOfTypeY))
+
+        transfers = FixedPointRoot(self.UpdateTransfers, transfers_init, acceleration=acceleration)[0]
+
+        prob_matched_X = self.prob_transfer_X(transfers)
+        prob_matched_Y = self.prob_transfer_Y(transfers)
+
+        prob_unmatched_X = 1 - jnp.sum(prob_matched_X, axis=self.exog.axisX, keepdims=True)
+        prob_unmatched_Y = 1 - jnp.sum(prob_matched_Y, axis=self.exog.axisY, keepdims=True)
+
+        matched = self.exog.nX * prob_matched_X
+
+        unmatched_X = self.exog.nX * prob_unmatched_X
+        unmatched_Y = self.exog.nY * prob_unmatched_Y
+
+        self.endog = EndogenousVariables(
+            transfers=transfers,
+
+            prob_matched_X=prob_matched_X,
+            prob_matched_Y=prob_matched_Y,
+
+            prob_unmatched_X=prob_unmatched_X,
+            prob_unmatched_Y=prob_unmatched_Y,
+
+            matched=matched,
+
+            unmatched_X=unmatched_X,
+            unmatched_Y=unmatched_Y
+        )
+
+def Logit(v: jnp.ndarray, axis: int = 0, outside_option: bool = True) -> jnp.ndarray:
     """Calculates the logit choice probabilitie of the inside options
 
         Inputs:
@@ -19,7 +145,7 @@ def Logit(v: jnp.ndarray, axis: int = 0, outside: bool = True) -> jnp.ndarray:
          - choice probabilities of matching with any type.
     """
     # exponentiated payoff of outside option
-    expV0 = jnp.where(outside, 1.0, 0.0)
+    expV0 = jnp.where(outside_option, 1.0, 0.0)
 
     # exponentiated payoffs of inside options (nominator)
     nominator = jnp.exp(v)
@@ -32,7 +158,7 @@ def GNLogit(v: jnp.ndarray,
             degree: jnp.ndarray, 
             nesting: jnp.ndarray, 
             axis: int = 0, 
-            outside: bool = True) -> jnp.ndarray:
+            outside_option: bool = True) -> jnp.ndarray:
     """Calculates the generalized nested logit choice probabilitie of the inside
     options
 
@@ -51,7 +177,7 @@ def GNLogit(v: jnp.ndarray,
 
     # Set up functions for calculating choice probabilities
     expV = degree * jnp.exp(jnp.expand_dims(v, axis=axisN) / nesting)
-    expV0 = jnp.where(outside, 1.0, 0.0)
+    expV0 = jnp.where(outside_option, 1.0, 0.0)
     expV_nest = jnp.sum(expV, axis=axisA, keepdims=True)
 
     nominator = jnp.sum(expV * (expV_nest ** (nesting - 1.0)), axis=axisN)
@@ -60,86 +186,3 @@ def GNLogit(v: jnp.ndarray,
                                   keepdims=True)
     return nominator / denominator
 
-def UpdateTransfer(t_init: jnp.ndarray, 
-                   K: jnp.ndarray, 
-                   nX: jnp.ndarray, 
-                   nY: jnp.ndarray, 
-                   probX: callable, 
-                   probY: callable) -> tuple[jnp.ndarray, jnp.ndarray]:
-    """Calculates excess demand and updates fixed point equation for transfers
-
-        Inputs:
-         - t_init: array containing initial transfers
-         - K: matrix describing the adjustment of the step lenght
-         - nX: matrix containing the distribution of workers
-         - nY: matrix containing the distribution of firms
-         - probX: workers' choice probabilities as function of transfers
-         - probY: firms' choice probabilities as function of transfers
-
-        Outputs:
-         - t_update: array containing the updated transfers
-         - logratio: array containing the log-ratio of excess demand
-    """
-    # Calculate firms' demand and workers' supply
-    nXpX = nX * probX(t_init) # Workers' supply to firms
-    nYpY = nY * probY(t_init) # Firms' demand for workers
-
-    # Calculate the log-ratio of firms' demand and workers' supply
-    logratio = jnp.log(nYpY / nXpX)
-
-    # Update transfer
-    t_update = t_init + K * logratio
-    return t_update, logratio
-
-def EndogenousVariables(cX: jnp.ndarray, 
-                        cY: jnp.ndarray, 
-                        probX_vX: callable, 
-                        probY_vY: callable, 
-                        exog: Pytree,
-                        accelerator: str = "None") -> Pytree:
-    """Solves the matching model for a given specification of the choice
-    probabilities (probX_vX) and (probY_vY) and exogenous variables (exog).
-
-        Inputs:
-          - cX: matrix describing the adjustment of the step lenght for workers
-          - cY: matrix describing the adjustment of the step lenght for firms
-          - probX_vX: workers' choice probabilities as function of payoffs, vX
-          - probY_vY: firms' choice probabilities as function of payoffs, vY
-          - exog: pytree containing the exogenous variables of the model
-
-        Outputs:
-          - endog: pytree containing the endogenous variables of the model
-    """
-    # Redefine choice probabilities as functions of transfer
-    probX_T = lambda T: probX_vX((exog.utilityX + T) / exog.scaleX)
-    probY_T = lambda T: probY_vY((exog.utilityY - T) / exog.scaleY)
-
-    # Calculate the adjustment of the step length in the fixed point equation
-    K = (cX * exog.scaleX * cY * exog.scaleY) / (cX * exog.scaleX + cY * exog.scaleY)
-
-    # Set up system of fixed point equations
-    fxp = lambda T: UpdateTransfer(T, K, exog.nX, exog.nY, probX_T, probY_T)
-
-    # Initial guess for transfer
-    transfer_init = jnp.zeros((exog.typesX, exog.typesY))
-
-    @dataclass
-    class Endog(Pytree, mutable=True):
-        # Find the equilibrium transfer by fixed point iterations
-        transfer = FixedPointRoot(fxp, transfer_init, acceleration=accelerator)[0]
-
-        # Calculate the choice probabilities of the workers' (pX) and firms' (pY)
-        probX = probX_T(transfer)
-        probY = probY_T(transfer)
-
-        # Calculate the choice probabilities for the outside options
-        probX0 = 1 - jnp.sum(probX, axis=exog.axisX, keepdims=True)
-        probY0 = 1 - jnp.sum(probY, axis=exog.axisY, keepdims=True)
-
-        # Calculate the equilibrium distribution of the matches
-        matched = exog.nX * probX
-
-        # Calculate the unmatched workers and firms
-        unmatchedX = exog.nX * probX0
-        unmatchedY = exog.nY * probY0
-    return Endog()
