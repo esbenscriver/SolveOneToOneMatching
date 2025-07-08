@@ -58,8 +58,8 @@ nestsX, nestsY = 2, 3
 
 # simulate exogenous variables of the matching model
 exog = ExogenousVariables(
-  axisX = 1, # set axis that describe the alternatives in the workers' choice set
-  axisY = 0, # set axis that describe the alternatives in the firms' choice set
+  axisX = 1, # set axis that describe the alternatives in agent X's choice set 
+  axisY = 0, # set axis that describe the alternatives in agent Y's choice set
 
   # Simulate choice-specific utilities
   utilityX =-random.uniform(key=random.PRNGKey(111), shape=(typesX, typesY)),
@@ -69,20 +69,20 @@ exog = ExogenousVariables(
   scaleX = random.uniform(key=random.PRNGKey(113), shape=(typesX, 1)) + 1.0,
   scaleY = random.uniform(key=random.PRNGKey(114), shape=(1, typesY)) + 1.0,
 
-  # Simulate distribution of workers and firms
+  # Simulate distribution of agents
   nX = random.uniform(key=random.PRNGKey(998), shape=(typesX, 1)),
   nY = random.uniform(key=random.PRNGKey(999), shape=(1, typesY)) + 1.0,
 )
 
-# Simulate nesting parameters for workers (λX) and firms (λY)
+# Simulate nesting parameters
 nestingParameterX = random.uniform(key=random.PRNGKey(115), shape=(typesX, 1, nestsY))
 nestingParameterY = random.uniform(key=random.PRNGKey(116), shape=(nestsX, 1, typesY))
 
-# Simulate matrices describing nesting structure of workers and firms
+# Simulate matrices describing nesting structure
 nestingY = SimulateDummyMatrix(340, nestsX, typesX, axis=exog.axisX)
 nestingX = SimulateDummyMatrix(333, nestsY, typesY, axis=exog.axisY)
 
-# Simulate nesting degree parameters for workers (αX) and firms (αY).
+# Simulate nesting degree parameters
 nestingDegreeX= Logit(
   random.uniform(key=random.PRNGKey(117), shape=(1, typesY, nestsY)),
   axis=2, 
@@ -94,7 +94,7 @@ nestingDegreeY = Logit(
   outside_option=False,
 )
 
-# Find the endogenous variables: equilibrium distribution of wages and matches
+# Find the endogenous variables: equilibrium distribution of transfers and matches
 print('-----------------------------------------------------------------------')
 print('Solve the logit matching model:')
 model_logit = MatchingModel(

@@ -14,19 +14,19 @@ from FixedPointJAX import FixedPointRoot
 
 @dataclass
 class ExogenousVariables(Pytree, mutable=False):
-    # Set axis describing the alternatives of workers (axisX) and firms (axisY)
+    # Set axis describing the alternatives for agents of type X and Y
     axisX: int
     axisY: int
 
-    # Distribution of workers (nX) and firms(nY)
+    # Distribution of agents of type X and Y
     nX: jnp.ndarray
     nY: jnp.ndarray
 
-    # Choice-specific utilities of workers (utilityX) and firms(utilityY)
+    # Choice-specific utilities ofor agents of type X and Y
     utilityX: jnp.ndarray 
     utilityY: jnp.ndarray 
 
-    # Scale parameters of workers (scaleX) and firms(scaleY)
+    # Scale parameters for agents of type X and Y
     scaleX: jnp.ndarray
     scaleY: jnp.ndarray
 
@@ -43,18 +43,18 @@ class EndogenousVariables(Pytree, mutable=True):
     # Find the equilibrium transfer by fixed point iterations
     transfers: jnp.ndarray
 
-    # Calculate the choice probabilities of the workers' (pX) and firms' (pY)
+    # Choice probabilities for agents of type X and Y
     prob_matched_X: jnp.ndarray
     prob_matched_Y: jnp.ndarray
 
-    # Calculate the choice probabilities for the outside options
+    # Choice probabilities for the outside options
     prob_unmatched_X: jnp.ndarray
     prob_unmatched_Y: jnp.ndarray
 
-    # Calculate the equilibrium distribution of the matches
+    # Equilibrium distribution of matched agents
     matched: jnp.ndarray
 
-    # Calculate the unmatched workers and firms
+    # Equilibrium distribution of unmatched agents
     unmatched_X: jnp.ndarray
     unmatched_Y: jnp.ndarray
 
@@ -76,11 +76,11 @@ class MatchingModel(Pytree, mutable=True):
         self.K = (self.cX * self.exog.scaleX * self.cY * self.exog.scaleY) / (self.cX * self.exog.scaleX + self.cY * self.exog.scaleY)
 
     def _prob_transfer_X(self, transfers: jnp.ndarray) -> jnp.ndarray:
-        """ Define choice probabilites of the workers."""
+        """ Calculates choice probabilites of agents of type X."""
         return self.prob_X((self.exog.utilityX + transfers) / self.exog.scaleX)
         
     def _prob_transfer_Y(self, transfers: jnp.ndarray) -> jnp.ndarray:
-        """ Define choice probabilites of the firms."""
+        """ Calculates choice probabilites of agents of type Y."""
         return self.prob_Y((self.exog.utilityY - transfers) / self.exog.scaleY)
 
     def _UpdateTransfers(self, t_initial: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
@@ -93,11 +93,11 @@ class MatchingModel(Pytree, mutable=True):
             - t_updated: array containing the updated transfers
             - logratio: array containing the log-ratio of excess demand
         """
-        # Calculate firms' demand and workers' supply
-        nXpX = self.exog.nX * self._prob_transfer_X(t_initial) # Workers' supply to firms
-        nYpY = self.exog.nY * self._prob_transfer_Y(t_initial) # Firms' demand for workers
+        # Calculate demand for both sides of the market
+        nXpX = self.exog.nX * self._prob_transfer_X(t_initial) # Demand of agents of type X
+        nYpY = self.exog.nY * self._prob_transfer_Y(t_initial) # Demand of agents of type Y
 
-        # Calculate the log-ratio of firms' demand and workers' supply
+        # Calculate the log-ratio of excess demand
         logratio = jnp.log(nYpY / nXpX)
 
         # Update transfer
