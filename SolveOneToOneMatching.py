@@ -1,3 +1,9 @@
+"""
+JAX implementation of fixed-point iteration algoritm to solve one-to-one matching model with transferable utility
+
+Reference:
+Esben Scriver Andersen, Note on solving one-to-one matching models with transferable utility, 2024 (https://arxiv.org/pdf/2409.05518)
+"""
 import jax.numpy as jnp
 
 # import simple_pytree (used to store variables)
@@ -5,8 +11,6 @@ from simple_pytree import Pytree, dataclass
 
 # import fixed-point iterator
 from FixedPointJAX import FixedPointRoot
-
-# JAX code to solve a one-to-one matching model with transferable utility
 
 @dataclass
 class ExogenousVariables(Pytree, mutable=False):
@@ -68,12 +72,15 @@ class MatchingModel(Pytree, mutable=True):
     K: jnp.ndarray|None = None
 
     def _SetAdjustmentLength(self) -> None:
+        """ Set the adjustment factor of the fixed-point iteration algorithm."""
         self.K = (self.cX * self.exog.scaleX * self.cY * self.exog.scaleY) / (self.cX * self.exog.scaleX + self.cY * self.exog.scaleY)
 
     def _prob_transfer_X(self, transfers: jnp.ndarray) -> jnp.ndarray:
+        """ Define choice probabilites of the workers."""
         return self.prob_X((self.exog.utilityX + transfers) / self.exog.scaleX)
         
     def _prob_transfer_Y(self, transfers: jnp.ndarray) -> jnp.ndarray:
+        """ Define choice probabilites of the firms."""
         return self.prob_Y((self.exog.utilityY - transfers) / self.exog.scaleY)
 
     def _UpdateTransfers(self, t_initial: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:

@@ -1,3 +1,15 @@
+"""
+Solve three examples of one-to-one matching model with linear transfers. 
+
+The discrete choices of the agents on both sides of the matching market are described by the
+ - Logit model
+ - Nested logit model
+ - Generalized nested logit model
+
+Reference:
+Esben Scriver Andersen, Note on solving one-to-one matching models with transferable utility, 2024 (https://arxiv.org/pdf/2409.05518)
+"""
+
 # import JAX
 import jax
 import jax.numpy as jnp
@@ -46,15 +58,18 @@ nestsX, nestsY = 2, 3
 
 # simulate exogenous variables of the matching model
 exog = ExogenousVariables(
-  axisX = 1,
-  axisY = 0,
+  axisX = 1, # set axis that describe the alternatives in the workers' choice set
+  axisY = 0, # set axis that describe the alternatives in the firms' choice set
 
+  # Simulate choice-specific utilities
   utilityX =-random.uniform(key=random.PRNGKey(111), shape=(typesX, typesY)),
   utilityY = random.uniform(key=random.PRNGKey(112), shape=(typesX, typesY)),
 
+  # Simulate scale parameters
   scaleX = random.uniform(key=random.PRNGKey(113), shape=(typesX, 1)) + 1.0,
   scaleY = random.uniform(key=random.PRNGKey(114), shape=(1, typesY)) + 1.0,
 
+  # Simulate distribution of workers and firms
   nX = random.uniform(key=random.PRNGKey(998), shape=(typesX, 1)),
   nY = random.uniform(key=random.PRNGKey(999), shape=(1, typesY)) + 1.0,
 )
@@ -67,8 +82,7 @@ nestingParameterY = random.uniform(key=random.PRNGKey(116), shape=(nestsX, 1, ty
 nestingY = SimulateDummyMatrix(340, nestsX, typesX, axis=exog.axisX)
 nestingX = SimulateDummyMatrix(333, nestsY, typesY, axis=exog.axisY)
 
-# Simulate nesting degree parameters for workers (αX) and firms (αY). The
-# logit transformation ensures that αX and αY sums to unit across nests
+# Simulate nesting degree parameters for workers (αX) and firms (αY).
 nestingDegreeX= Logit(
   random.uniform(key=random.PRNGKey(117), shape=(1, typesY, nestsY)),
   axis=2, 
