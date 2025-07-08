@@ -7,7 +7,7 @@ The discrete choices of the agents on both sides of the matching market are desc
  - Generalized nested logit model
 
 Reference:
-Esben Scriver Andersen, Note on solving one-to-one matching models with transferable utility, 2024 (https://arxiv.org/pdf/2409.05518)
+Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2024 (https://arxiv.org/pdf/2409.05518)
 """
 
 # import JAX
@@ -19,7 +19,7 @@ from jax import random
 jax.config.update("jax_enable_x64", True)
 
 # import solver for one-to-one matching model
-from SolveOneToOneMatching import Logit, GNLogit, EndogenousVariables, ExogenousVariables, MatchingModel
+from SolveOneToOneMatching import Logit, GNLogit, ExogenousVariables, MatchingModel
 
 def SimulateDummyMatrix(key: int, nests: jnp.ndarray, types: int, axis: int):
   """Simulate matrix describing the nesting structure of the nested logit model
@@ -100,9 +100,11 @@ print('Solving the logit matching model:')
 model_logit = MatchingModel(
   exog = exog,
 
+  # Set up logit choice probabilities
   prob_X = lambda vX: Logit(vX, axis=exog.axisX, outside_option=True),
   prob_Y = lambda vY: Logit(vY, axis=exog.axisY, outside_option=True),
 
+  # Set scalars used for adjusting step length of fixed-point iteration
   cX = 1.0,
   cY = 1.0,
 )
@@ -114,13 +116,13 @@ print('Solving the nested logit matching model:')
 model_nested_logit = MatchingModel(
   exog = exog,
 
+  # Set up nested logit choice probabilities
   prob_X = lambda vX: GNLogit(
     vX, 
     degree=nestingX, 
     nesting=nestingParameterX, 
     axis=exog.axisX
   ),
-
   prob_Y = lambda vY: GNLogit(
     vY, 
     degree=nestingY, 
@@ -128,6 +130,7 @@ model_nested_logit = MatchingModel(
     axis=exog.axisY,
   ),
 
+  # Set scalars used for adjusting step length of fixed-point iteration
   cX = jnp.sum(nestingX * nestingParameterX, axis=2),
   cY = jnp.sum(nestingY * nestingParameterY, axis=0),
 )
@@ -139,6 +142,7 @@ print('Solving the generalized nested logit matching model:')
 model_GNL = MatchingModel(
   exog = exog,
 
+  # Set up generalized nested logit choice probabilities
   prob_X = lambda vX: GNLogit(
     vX, 
     degree=nestingDegreeX, 
@@ -153,6 +157,7 @@ model_GNL = MatchingModel(
     axis=exog.axisY,
   ),
 
+  # Set scalars used for adjusting step length of fixed-point iteration
   cX = jnp.min(jnp.squeeze(nestingParameterX), axis=exog.axisX, keepdims=True),
   cY = jnp.min(jnp.squeeze(nestingParameterY), axis=exog.axisY, keepdims=True),
 )
