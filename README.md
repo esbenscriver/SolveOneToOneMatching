@@ -26,9 +26,15 @@ If you use this script in your research, I ask that you also cite [Andersen (202
 # Installation
 In order to run the scripts, you need to have installed JAX, Simple Pytree, and FixedPointJAX. The latter is an implementation of a fixed point iteration algorithm that allow the user to solve the system of fixed point equations by standard fixed point iterations and the SQUAREM accelerator, see [Du and Varadhan (2020)](https://www.jstatsoft.org/article/view/v092i07).
 
-Install dependencies
+## 1. Clone the repository
+```bash
+git clone https://github.com/esbenscriver/SolveOneToOneMatching.git cd your-repo-name
+```
 
-    uv sync
+## 2. Install dependencies
+```bash
+uv sync
+```
     
 
 
