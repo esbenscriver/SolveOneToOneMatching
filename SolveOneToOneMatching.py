@@ -67,16 +67,16 @@ class MatchingModel(Pytree, mutable=True):
     endog: EndogenousVariables|None = None
     K: jnp.ndarray|None = None
 
-    def SetAdjustmentLength(self) -> None:
+    def _SetAdjustmentLength(self) -> None:
         self.K = (self.cX * self.exog.scaleX * self.cY * self.exog.scaleY) / (self.cX * self.exog.scaleX + self.cY * self.exog.scaleY)
 
-    def prob_transfer_X(self, transfers: jnp.ndarray) -> jnp.ndarray:
+    def _prob_transfer_X(self, transfers: jnp.ndarray) -> jnp.ndarray:
         return self.prob_X((self.exog.utilityX + transfers) / self.exog.scaleX)
         
-    def prob_transfer_Y(self, transfers: jnp.ndarray) -> jnp.ndarray:
+    def _prob_transfer_Y(self, transfers: jnp.ndarray) -> jnp.ndarray:
         return self.prob_Y((self.exog.utilityY - transfers) / self.exog.scaleY)
 
-    def UpdateTransfers(self, t_initial: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+    def _UpdateTransfers(self, t_initial: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
         """Calculates excess demand and updates fixed point equation for transfers
 
             Inputs:
@@ -87,8 +87,8 @@ class MatchingModel(Pytree, mutable=True):
             - logratio: array containing the log-ratio of excess demand
         """
         # Calculate firms' demand and workers' supply
-        nXpX = self.exog.nX * self.prob_transfer_X(t_initial) # Workers' supply to firms
-        nYpY = self.exog.nY * self.prob_transfer_Y(t_initial) # Firms' demand for workers
+        nXpX = self.exog.nX * self._prob_transfer_X(t_initial) # Workers' supply to firms
+        nYpY = self.exog.nY * self._prob_transfer_Y(t_initial) # Firms' demand for workers
 
         # Calculate the log-ratio of firms' demand and workers' supply
         logratio = jnp.log(nYpY / nXpX)
@@ -101,15 +101,15 @@ class MatchingModel(Pytree, mutable=True):
         """ Solve equilibrium transfers of matching model and store endogenous variables"""
         
         #Set adjustment length of fixed-point iterator
-        self.SetAdjustmentLength()
+        self._SetAdjustmentLength()
         
         # Initial guess for transfer
         transfers_init = jnp.zeros((self.exog.numberOfTypeX, self.exog.numberOfTypeY))
 
-        transfers = FixedPointRoot(self.UpdateTransfers, transfers_init, acceleration=acceleration)[0]
+        transfers = FixedPointRoot(self._UpdateTransfers, transfers_init, acceleration=acceleration)[0]
 
-        prob_matched_X = self.prob_transfer_X(transfers)
-        prob_matched_Y = self.prob_transfer_Y(transfers)
+        prob_matched_X = self._prob_transfer_X(transfers)
+        prob_matched_Y = self._prob_transfer_Y(transfers)
 
         prob_unmatched_X = 1 - jnp.sum(prob_matched_X, axis=self.exog.axisX, keepdims=True)
         prob_unmatched_Y = 1 - jnp.sum(prob_matched_Y, axis=self.exog.axisY, keepdims=True)
