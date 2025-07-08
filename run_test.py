@@ -96,7 +96,7 @@ nestingDegreeY = Logit(
 
 # Find the endogenous variables: equilibrium distribution of wages and matches
 print('-----------------------------------------------------------------------')
-print('Solving the logit matching model:')
+print('Solve the logit matching model:')
 model_logit = MatchingModel(
   exog = exog,
 
@@ -112,7 +112,7 @@ model_logit = MatchingModel(
 model_logit.Solve(acceleration=acceleration)
 
 print('-----------------------------------------------------------------------')
-print('Solving the nested logit matching model:')
+print('Solve the nested logit matching model:')
 model_nested_logit = MatchingModel(
   exog = exog,
 
@@ -138,7 +138,7 @@ model_nested_logit = MatchingModel(
 model_nested_logit.Solve(acceleration=acceleration)
 
 print('-----------------------------------------------------------------------')
-print('Solving the generalized nested logit matching model:')
+print('Solve the generalized nested logit matching model:')
 model_GNL = MatchingModel(
   exog = exog,
 
