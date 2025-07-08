@@ -113,19 +113,25 @@ class MatchingModel(Pytree, mutable=True):
         # Initial guess for transfer
         transfers_init = jnp.zeros((self.exog.numberOfTypeX, self.exog.numberOfTypeY))
 
+        # Find equilibrium transfer by fixed-point iterations
         transfers = FixedPointRoot(self._UpdateTransfers, transfers_init, acceleration=acceleration)[0]
 
+        # Calculate probabilities of agents being matched
         prob_matched_X = self._prob_transfer_X(transfers)
         prob_matched_Y = self._prob_transfer_Y(transfers)
 
+        # Calculate probabilities of agents being unmatched
         prob_unmatched_X = 1 - jnp.sum(prob_matched_X, axis=self.exog.axisX, keepdims=True)
         prob_unmatched_Y = 1 - jnp.sum(prob_matched_Y, axis=self.exog.axisY, keepdims=True)
 
+        # Calculate distribution of matched agents
         matched = self.exog.nX * prob_matched_X
 
+        # Calculate distribution of unmatched agents
         unmatched_X = self.exog.nX * prob_unmatched_X
         unmatched_Y = self.exog.nY * prob_unmatched_Y
 
+        # Store equilibrium outcomes in dataclass
         self.endog = EndogenousVariables(
             transfers=transfers,
 
