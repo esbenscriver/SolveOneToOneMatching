@@ -7,7 +7,7 @@ The discrete choices of the agents on both sides of the matching market are desc
  - Generalized nested logit model
 
 Reference:
-Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2024 (https://arxiv.org/pdf/2409.05518)
+Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2024 (https://arxiv.org/pdf/2409.05518v3)
 """
 
 # import JAX
