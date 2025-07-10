@@ -1,13 +1,12 @@
 """
-Solve three examples of one-to-one matching model with linear transfers. 
-
-The discrete choices of the agents on both sides of the matching market are described by the
+Solve three examples of one-to-one matching model with linear transfers, where the discrete choices of the agents 
+on both sides of the matching market are described by:
  - Logit model
  - Nested logit model
  - Generalized nested logit model
 
 Reference:
-Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2024 (https://arxiv.org/pdf/2409.05518v3)
+Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2025 (https://arxiv.org/pdf/2409.05518v3)
 """
 
 # import JAX
@@ -19,7 +18,8 @@ from jax import random
 jax.config.update("jax_enable_x64", True)
 
 # import solver for one-to-one matching model
-from SolveOneToOneMatching import Logit, GNLogit, ExogenousVariables, MatchingModel
+from module.MatchingModel import MatchingModel, ExogenousVariables
+from module.DiscreteChoiceModel import Logit, GNLogit
 
 def SimulateDummyMatrix(key: int, nests: jnp.ndarray, types: int, axis: int):
   """Simulate matrix describing the nesting structure of the nested logit model
@@ -38,15 +38,19 @@ def SimulateDummyMatrix(key: int, nests: jnp.ndarray, types: int, axis: int):
   nestID = jnp.expand_dims(jnp.arange(nests), axis=axis)
 
   # simulate which nest the alternatives belong to
-  alternativeNestID = jnp.expand_dims(random.randint(key=random.PRNGKey(key),
-                                                     minval=0,
-                                                     maxval=nests,
-                                                     shape=(types,)),
-                                      axis=1-axis)
+  alternativeNestID = jnp.expand_dims(
+    random.randint(
+      key=random.PRNGKey(key),
+      minval=0,
+      maxval=nests,
+      shape=(types,)
+    ),
+    axis=1-axis
+  )
 
   return jnp.expand_dims(jnp.where(nestID == alternativeNestID, 1.0, 0.0), axis=-axis)
 
-# choose accelerator
+# choose accelerator of fixed-point iterations
 acceleration = "None"
 # acceleration = "SQUAREM"
 
