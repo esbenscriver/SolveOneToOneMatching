@@ -1,6 +1,7 @@
 
-[![arXiv](https://img.shields.io/badge/arXiv-2409.05518-b31b1b.svg)](https://arxiv.org/pdf/2409.05518v3)
 [![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![arXiv](https://img.shields.io/badge/arXiv-2409.05518-b31b1b.svg)](https://arxiv.org/pdf/2409.05518v3)
+
 
 # Description
 This script implements a fixed-point iteration algorithm in JAX to solve a class of one-to-one matching models with linear transfers.
