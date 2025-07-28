@@ -5,60 +5,140 @@ Reference:
 Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2025 (https://arxiv.org/pdf/2409.05518v3)
 """
 import jax.numpy as jnp
+from simple_pytree import Pytree, dataclass
 
-def Logit(v: jnp.ndarray, axis: int = 0, outside_option: bool = True) -> jnp.ndarray:
-    """Calculates the logit choice probabilitie of the inside options
+@dataclass
+class LogitModel(Pytree, mutable=True):
+    utility: jnp.ndarray
+    scale: jnp.ndarray
 
-        Inputs:
-         - v: choice-specific payoffs
-         - axis: tells which dimensions to sum over
+    n: jnp.ndarray
 
-        Outputs:
-         - choice probabilities of alternatives.
-    """
-    # exponentiated payoff of outside option
-    expV0 = jnp.where(outside_option, 1.0, 0.0)
+    outside_option: bool = True
+    axis: int = 1
 
-    # exponentiated payoffs of inside options (nominator)
-    nominator = jnp.exp(v)
+    @property
+    def adjustment(self) -> jnp.ndarray:
+        # Set up adjustment factor for the logit model
+        return jnp.ones_like(self.scale, dtype=float)
 
-    # denominator of choice probabilities
-    denominator = expV0 + jnp.sum(nominator, axis=axis, keepdims=True)
-    return nominator / denominator
+    def ChoiceProbabilities(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute the logit choice probabilitie for the inside options."""
+        expV0 = jnp.where(self.outside_option, 1.0, 0.0)
 
-def GNLogit(
-        v: jnp.ndarray, 
-        degree: jnp.ndarray, 
-        nesting: jnp.ndarray, 
-        axis: int = 0, 
-        outside_option: bool = True,
-    ) -> jnp.ndarray:
-    """Calculates the generalized nested logit choice probabilitie of the inside
-    options
+        # exponentiated payoffs of inside options (nominator)
+        nominator = jnp.exp(v)
 
-        Inputs:
-         - v: choice-specific payoffs
-         - degree: degree the alternatives belong to the different nests
-         - nesting: nesting parameters
-         - axis: tells which dimensions to sum over
+        # denominator of choice probabilities
+        denominator = expV0 + jnp.sum(nominator, axis=self.axis, keepdims=True)
+        return nominator / denominator
+    
+    def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute demand for inside options."""
+        return self.n * self.ChoiceProbabilities(v)
 
-        Outputs:
-         - choice probabilities of matching with any type.
-    """
-    # set dimensions of nests, alternatives, and types
-    axisN = 2 * axis # axis for nests
-    axisA = 1 # axis for alternatives
+    def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute demand for outside option."""
+        return self.n - jnp.sum(self.Demand(v), axis=self.axis, keep=True)
+@dataclass
+class NestedLogitModel(Pytree, mutable=True):
+    utility: jnp.ndarray
+    scale: jnp.ndarray
 
-    # Set up functions for calculating choice probabilities
-    expV = degree * jnp.exp(jnp.expand_dims(v, axis=axisN) / nesting)
-    expV0 = jnp.where(outside_option, 1.0, 0.0)
-    expV_nest = jnp.sum(expV, axis=axisA, keepdims=True)
+    nesting_index: jnp.ndarray
+    nesting_parameter: jnp.ndarray
 
-    nominator = jnp.sum(expV * (expV_nest ** (nesting - 1.0)), axis=axisN)
-    denominator = expV0 + jnp.sum(
-        jnp.squeeze(expV_nest ** nesting),
-        axis=axis,
-        keepdims=True
-    )
-    return nominator / denominator
+    n: jnp.ndarray
+
+    outside_option: bool = True
+    axis: int = 1
+
+    @property
+    def number_of_nests(self) -> int:
+        return self.nesting_parameter.shape[1]
+
+    @property
+    def nesting_structure(self) -> jnp.ndarray:
+        # Set up matrix that indicate which nest each alternative belongs to
+        index_of_nests = jnp.arange(self.number_of_nests)
+        nesting_structur = jnp.expand_dims(self.nesting_index, self.axis) == jnp.expand_dims(index_of_nests, 1 - self.axis)
+        return nesting_structur.astype(float)
+    
+    @property
+    def adjustment(self) -> jnp.ndarray:
+        # Set up adjustment factor for the nested logit model
+        return self.nesting_parameter @ self.nesting_structure.T
+
+    def ChoiceProbabilities(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute the nested logit choice probabilities for inside options."""
+        expV0 = jnp.where(self.outside_option, 1.0, 0.0)
+
+        # Explanation einsum indexes:
+        # - n: index for agents' types
+        # - j: index for alternatives (inside options)
+        # - k: index for nests of alternatives (outside option is assumed to belong to its own nest)
+
+        nesting_parameter = jnp.einsum('nk, jk -> nj', self.nesting_parameter, self.nesting_structure)
+        
+        nominator_cond = jnp.exp(v / nesting_parameter) 
+        denominator_cond = jnp.einsum('nj, jk -> nk', nominator_cond, self.nesting_structure)
+        P_cond = nominator_cond / jnp.einsum('nk, jk -> nj', denominator_cond, self.nesting_structure)
+
+        nominator_nest = denominator_cond ** self.nesting_parameter
+        denominator_nest = expV0 + jnp.sum(nominator_nest, axis=self.axis, keepdims=True)
+        P_nest = jnp.einsum('nk, jk -> nj', nominator_nest, self.nesting_structure) / denominator_nest
+        return P_cond * P_nest
+    
+    def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute demand for inside options."""
+        return self.n * self.ChoiceProbabilities(v)
+
+    def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute demand for outside option."""
+        return self.n - jnp.sum(self.Demand(v), axis=self.axis, keep=True)
+@dataclass
+class GeneralizedNestedLogitModel(Pytree, mutable=True):
+    utility: jnp.ndarray
+    scale: jnp.ndarray
+
+    nesting_structure: jnp.ndarray
+    nesting_parameter: jnp.ndarray
+
+    n: jnp.ndarray
+
+    outside_option: bool = True
+    axis: int = 1
+    
+    @property
+    def adjustment(self) -> jnp.ndarray:
+        # Set up adjustment factor for the generalized nested logit model
+        return jnp.min(self.nesting_parameter, axis=self.axis, keepdims=True)
+
+    def ChoiceProbabilities(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute the nested logit choice probabilities for inside options."""
+        expV0 = jnp.where(self.outside_option, 1.0, 0.0)
+
+        # Explanation einsum indexes:
+        # - n: index for agents' types
+        # - j: index for alternatives (inside options)
+        # - k: index for nests of alternatives (outside option is assumed to belong to its own nest)
+
+        nesting_parameter = jnp.einsum('nk, jk -> nj', self.nesting_parameter, self.nesting_structure)
+        
+        nominator_cond = jnp.exp(v / nesting_parameter) 
+        denominator_cond = jnp.einsum('nj, jk -> nk', nominator_cond, self.nesting_structure)
+        P_cond = nominator_cond / jnp.einsum('nk, jk -> nj', denominator_cond, self.nesting_structure)
+
+        nominator_nest = denominator_cond ** self.nesting_parameter
+        denominator_nest = expV0 + jnp.sum(nominator_nest, axis=self.axis, keepdims=True)
+        P_nest = jnp.einsum('nk, jk -> nj', nominator_nest, self.nesting_structure) / denominator_nest
+        return P_cond * P_nest
+    
+    def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute demand for inside options."""
+        return self.n * self.ChoiceProbabilities(v)
+
+    def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
+        """Compute demand for outside option."""
+        return self.n - jnp.sum(self.Demand(v), axis=self.axis, keep=True)
 

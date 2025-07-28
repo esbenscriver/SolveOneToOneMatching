@@ -14,156 +14,101 @@ import jax
 import jax.numpy as jnp
 from jax import random
 
+import sys
+
 # Increase precision to 64 bit
 jax.config.update("jax_enable_x64", True)
 
 # import solver for one-to-one matching model
-from module.MatchingModel import MatchingModel, ExogenousVariables
-from module.DiscreteChoiceModel import Logit, GNLogit
-
-def SimulateDummyMatrix(key: int, nests: jnp.ndarray, types: int, axis: int):
-  """Simulate matrix describing the nesting structure of the nested logit model
-  for the agents on the other side of the market.
-
-      Inputs:
-        - key:
-        - types: number of types
-        - nests: number of nests
-        - axis: describe the dimension of the agents of the other side
-
-      Outputs:
-        - matrix describing the nesting structure
-  """
-  # ID of the nest
-  nestID = jnp.expand_dims(jnp.arange(nests), axis=axis)
-
-  # simulate which nest the alternatives belong to
-  alternativeNestID = jnp.expand_dims(
-    random.randint(
-      key=random.PRNGKey(key),
-      minval=0,
-      maxval=nests,
-      shape=(types,)
-    ),
-    axis=1-axis
-  )
-
-  return jnp.expand_dims(jnp.where(nestID == alternativeNestID, 1.0, 0.0), axis=-axis)
+from module.MatchingModel import MatchingModel
+from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, GeneralizedNestedLogitModel
 
 # choose accelerator of fixed-point iterations
 acceleration = "None"
 # acceleration = "SQUAREM"
 
-# Set size of matching market
-typesX, typesY = 4, 6
+# Set number of types of agents on both sides of the market
+types_X, types_Y = 4, 6
+
+# Simulate choice-specific utilities
+utility_X =-random.uniform(key=random.PRNGKey(111), shape=(types_X, types_Y))
+utility_Y = random.uniform(key=random.PRNGKey(112), shape=(types_Y, types_X))
+
+# Simulate scale parameters
+scale_X = random.uniform(key=random.PRNGKey(113), shape=(types_X, 1)) + 1.0
+scale_Y = random.uniform(key=random.PRNGKey(114), shape=(types_Y, 1)) + 1.0
+
+# Simulate distribution of agents
+n_X = random.uniform(key=random.PRNGKey(115), shape=(types_X, 1))
+n_Y = random.uniform(key=random.PRNGKey(116), shape=(types_Y, 1)) + 1.0
 
 # Set number of nests
-nestsX, nestsY = 2, 3
-
-# simulate exogenous variables of the matching model
-exog = ExogenousVariables(
-  axisX = 1, # set axis that describe the alternatives in agent X's choice set 
-  axisY = 0, # set axis that describe the alternatives in agent Y's choice set
-
-  # Simulate choice-specific utilities
-  utilityX =-random.uniform(key=random.PRNGKey(111), shape=(typesX, typesY)),
-  utilityY = random.uniform(key=random.PRNGKey(112), shape=(typesX, typesY)),
-
-  # Simulate scale parameters
-  scaleX = random.uniform(key=random.PRNGKey(113), shape=(typesX, 1)) + 1.0,
-  scaleY = random.uniform(key=random.PRNGKey(114), shape=(1, typesY)) + 1.0,
-
-  # Simulate distribution of agents
-  nX = random.uniform(key=random.PRNGKey(998), shape=(typesX, 1)),
-  nY = random.uniform(key=random.PRNGKey(999), shape=(1, typesY)) + 1.0,
-)
+nests_X, nests_Y = 2, 3
 
 # Simulate nesting parameters
-nestingParameterX = random.uniform(key=random.PRNGKey(115), shape=(typesX, 1, nestsY))
-nestingParameterY = random.uniform(key=random.PRNGKey(116), shape=(nestsX, 1, typesY))
+nesting_parameter_X = random.uniform(key=random.PRNGKey(211), shape=(types_X, nests_Y))
+nesting_parameter_Y = random.uniform(key=random.PRNGKey(212), shape=(types_Y, nests_X))
 
-# Simulate matrices describing nesting structure
-nestingY = SimulateDummyMatrix(340, nestsX, typesX, axis=exog.axisX)
-nestingX = SimulateDummyMatrix(333, nestsY, typesY, axis=exog.axisY)
-
-# Simulate nesting degree parameters
-nestingDegreeX= Logit(
-  random.uniform(key=random.PRNGKey(117), shape=(1, typesY, nestsY)),
-  axis=2, 
-  outside_option=False,
-)
-nestingDegreeY = Logit(
-  random.uniform(key=random.PRNGKey(118), shape=(nestsX, typesX, 1)),
-  axis=0, 
-  outside_option=False,
-)
-
-# Find the endogenous variables: equilibrium distribution of transfers and matches
 print('-----------------------------------------------------------------------')
-print('Solve the logit matching model:')
+print('1. Solve a matching model with logit demand:')
+
 model_logit = MatchingModel(
-  exog = exog,
-
-  # Set up logit choice probabilities
-  prob_X = lambda vX: Logit(vX, axis=exog.axisX, outside_option=True),
-  prob_Y = lambda vY: Logit(vY, axis=exog.axisY, outside_option=True),
-
-  # Set scalars used for adjusting step length of fixed-point iteration
-  cX = 1.0,
-  cY = 1.0,
+  model_X = LogitModel(utility=utility_X, scale=scale_X, n=n_X),
+  model_Y = LogitModel(utility=utility_Y, scale=scale_Y, n=n_Y),  
 )
 
 model_logit.Solve(acceleration=acceleration)
 
 print('-----------------------------------------------------------------------')
-print('Solve the nested logit matching model:')
+print('2. Solve a matching model with nested logit demand:')
+
 model_nested_logit = MatchingModel(
-  exog = exog,
+  model_X = NestedLogitModel(
+    utility=utility_X, 
+    scale=scale_X,
 
-  # Set up nested logit choice probabilities
-  prob_X = lambda vX: GNLogit(
-    vX, 
-    degree=nestingX, 
-    nesting=nestingParameterX, 
-    axis=exog.axisX
-  ),
-  prob_Y = lambda vY: GNLogit(
-    vY, 
-    degree=nestingY, 
-    nesting=nestingParameterY, 
-    axis=exog.axisY,
+    nesting_index=jnp.arange(types_Y) % nests_Y,
+    nesting_parameter=nesting_parameter_X,
+
+    n=n_X,
   ),
 
-  # Set scalars used for adjusting step length of fixed-point iteration
-  cX = jnp.sum(nestingX * nestingParameterX, axis=2),
-  cY = jnp.sum(nestingY * nestingParameterY, axis=0),
+  model_Y = NestedLogitModel(
+    utility=utility_Y, 
+    scale=scale_Y,
+
+    nesting_index=jnp.arange(types_X) % nests_X,
+    nesting_parameter=nesting_parameter_Y,
+
+    n=n_Y,
+  ),
 )
 
 model_nested_logit.Solve(acceleration=acceleration)
 
 print('-----------------------------------------------------------------------')
-print('Solve the generalized nested logit matching model:')
+print('3. Solve a matching model with generalized nested logit demand:')
+
 model_GNL = MatchingModel(
-  exog = exog,
+  model_X=GeneralizedNestedLogitModel(
+    utility=utility_X, 
+    scale=scale_X,
 
-  # Set up generalized nested logit choice probabilities
-  prob_X = lambda vX: GNLogit(
-    vX, 
-    degree=nestingDegreeX, 
-    nesting=nestingParameterX, 
-    axis=exog.axisX,
+    nesting_structure=random.dirichlet(key=random.PRNGKey(311), alpha=jnp.ones((nests_Y,)), shape=(types_Y,)),
+    nesting_parameter=nesting_parameter_X,
+
+    n=n_X,
   ),
 
-  prob_Y = lambda vY: GNLogit(
-    vY, 
-    degree=nestingDegreeY, 
-    nesting=nestingParameterY, 
-    axis=exog.axisY,
-  ),
+  model_Y = GeneralizedNestedLogitModel(
+    utility=utility_Y, 
+    scale=scale_Y,
 
-  # Set scalars used for adjusting step length of fixed-point iteration
-  cX = jnp.min(jnp.squeeze(nestingParameterX), axis=exog.axisX, keepdims=True),
-  cY = jnp.min(jnp.squeeze(nestingParameterY), axis=exog.axisY, keepdims=True),
+    nesting_structure=random.dirichlet(key=random.PRNGKey(312), alpha=jnp.ones((nests_X,)), shape=(types_X,)),
+    nesting_parameter=nesting_parameter_Y,
+
+    n=n_Y,
+  ),
 )
 
 model_GNL.Solve(acceleration=acceleration)

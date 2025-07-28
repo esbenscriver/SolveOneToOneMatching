@@ -13,7 +13,7 @@ The main script, MatchingModel.py, sets up and solves a general system of fixed-
 If you use this script in your research, I ask that you also cite [Andersen (2025)](https://arxiv.org/pdf/2409.05518v3).
 
 
-    @article{andersen2025notesolvingonetoonematching,
+    @article{andersen2025note,
       title={Note on solving one-to-one matching models with linear transferable utility}, 
       author={Esben Scrivers Andersen},
       year={2025},

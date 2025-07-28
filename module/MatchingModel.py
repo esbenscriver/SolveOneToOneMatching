@@ -12,79 +12,56 @@ from simple_pytree import Pytree, dataclass
 # import fixed-point iterator
 from FixedPointJAX import FixedPointRoot
 
-@dataclass
-class ExogenousVariables(Pytree, mutable=False):
-    # Set axis describing the alternatives for agents of type X and Y
-    axisX: int
-    axisY: int
+from module.DiscreteChoiceModel import LogitModel, NestedLogitModel
 
-    # Distribution of agents of type X and Y
-    nX: jnp.ndarray
-    nY: jnp.ndarray
-
-    # Choice-specific utilities ofor agents of type X and Y
-    utilityX: jnp.ndarray 
-    utilityY: jnp.ndarray 
-
-    # Scale parameters for agents of type X and Y
-    scaleX: jnp.ndarray
-    scaleY: jnp.ndarray
-
-    @property
-    def numberOfTypeX(self) -> int:
-        return self.nX.size
-    
-    @property
-    def numberOfTypeY(self) -> int:
-        return self.nY.size
-
-@dataclass
-class EndogenousVariables(Pytree, mutable=True):
-    # Find the equilibrium transfer by fixed point iterations
-    transfers: jnp.ndarray
-
-    # Choice probabilities for agents of type X and Y
-    prob_matched_X: jnp.ndarray
-    prob_matched_Y: jnp.ndarray
-
-    # Choice probabilities for the outside options
-    prob_unmatched_X: jnp.ndarray
-    prob_unmatched_Y: jnp.ndarray
-
-    # Equilibrium distribution of matched agents
-    matched: jnp.ndarray
-
-    # Equilibrium distribution of unmatched agents
-    unmatched_X: jnp.ndarray
-    unmatched_Y: jnp.ndarray
+import sys
 
 @dataclass
 class MatchingModel(Pytree, mutable=True):
-    exog: ExogenousVariables
+    """ Matching model
 
-    prob_X: callable
-    prob_Y: callable
+        - Inputs:
+            - model_X: demand model for agents of type X
+            - model_Y: demand model for agents of type X
+    """
+    model_X: LogitModel|NestedLogitModel
+    model_Y: LogitModel|NestedLogitModel
 
-    cX: float = 1.0
-    cY: float = 1.0
-
-    endog: EndogenousVariables|None = None
+    transfer: jnp.ndarray|None = None
+    matches: jnp.ndarray|None = None
     K: jnp.ndarray|None = None
 
-    def _SetAdjustmentLength(self) -> None:
-        """ Set the adjustment factor of the fixed-point iteration algorithm."""
-        self.K = (self.cX * self.exog.scaleX * self.cY * self.exog.scaleY) / (self.cX * self.exog.scaleX + self.cY * self.exog.scaleY)
+    @property
+    def numberOfTypes_X(self) -> int:
+        return self.model_X.n.size
+    
+    @property
+    def numberOfTypes_Y(self) -> int:
+        return self.model_Y.n.size
 
-    def _prob_transfer_X(self, transfers: jnp.ndarray) -> jnp.ndarray:
-        """ Calculates choice probabilites of agents of type X."""
-        return self.prob_X((self.exog.utilityX + transfers) / self.exog.scaleX)
+    def _SetAdjustmentLength(self) -> None:
+        """ Set the step length adjustment factor of the fixed-point iteration algorithm."""
+        scale_adjustment_X = self.model_X.scale * self.model_X.adjustment
+        scale_adjustment_Y = self.model_Y.scale * self.model_Y.adjustment
+
+        self.K = (scale_adjustment_X * scale_adjustment_Y.T) / (scale_adjustment_X + scale_adjustment_Y.T)
+
+    def _v_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
+        return (self.model_X.utility + transfer) / self.model_X.scale
+    
+    def _v_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
+        return (self.model_Y.utility - transfer.T) / self.model_Y.scale
+
+    def _Demand_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
+        """ Computes choice probabilites of agents of type X."""
+        return self.model_X.Demand(self._v_X(transfer))
         
-    def _prob_transfer_Y(self, transfers: jnp.ndarray) -> jnp.ndarray:
-        """ Calculates choice probabilites of agents of type Y."""
-        return self.prob_Y((self.exog.utilityY - transfers) / self.exog.scaleY)
+    def _Demand_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
+        """ Computes choice probabilites of agents of type Y."""
+        return self.model_Y.Demand(self._v_Y(transfer)).T
 
     def _UpdateTransfers(self, t_initial: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-        """Calculates excess demand and updates fixed point equation for transfers
+        """ Computes excess demand and updates fixed point equation for transfers
 
             Inputs:
             - t_initial: array containing initial transfers
@@ -94,55 +71,45 @@ class MatchingModel(Pytree, mutable=True):
             - logratio: array containing the log-ratio of excess demand
         """
         # Calculate demand for both sides of the market
-        nXpX = self.exog.nX * self._prob_transfer_X(t_initial) # Demand of agents of type X
-        nYpY = self.exog.nY * self._prob_transfer_Y(t_initial) # Demand of agents of type Y
+        demand_X = self._Demand_X(t_initial) # type X's demand for type Y
+        demand_Y = self._Demand_Y(t_initial) # type Y's demand for type X
 
-        # Calculate the log-ratio of excess demand
-        logratio = jnp.log(nYpY / nXpX)
+        # Calculate the log-ratio of excess demand for type X
+        logratio = jnp.log(demand_Y / demand_X)
 
         # Update transfer
         t_updated = t_initial + self.K * logratio
         return t_updated, logratio
 
-    def Solve(self, acceleration: str = "None") -> None:
-        """ Solve equilibrium transfers of matching model and store endogenous variables"""
+    def Solve(self,
+            acceleration: str = "None",
+            step_tol: float = 1e-8,
+            root_tol: float = 1e-6,
+            max_iter: int = 100_000
+        ) -> None:
+        """ Solve equilibrium transfers of matching model and store equilibrium outcomes
         
-        #Set adjustment length of fixed-point iterator
+            - Inputs:
+                - acceleration (str): set accelerator of fixed-point iterations ("None" or "SQUAREM)
+                - step_tol (float): stopping tolerance for step length of fixed-point iterations, x_{i+1} - x_{i}
+                - root_tol (float): stopping tolerance for root size of fixed-point iterations, z_{i}
+                - max_iter (int): maximum number of iterations
+        """
+        
+        # Set adjustment length of fixed-point iterator
         self._SetAdjustmentLength()
         
         # Initial guess for transfer
-        transfers_init = jnp.zeros((self.exog.numberOfTypeX, self.exog.numberOfTypeY))
+        transfer_init = jnp.zeros((self.numberOfTypes_X, self.numberOfTypes_Y))
 
         # Find equilibrium transfer by fixed-point iterations
-        transfers = FixedPointRoot(self._UpdateTransfers, transfers_init, acceleration=acceleration)[0]
+        self.transfer = FixedPointRoot(
+            self._UpdateTransfers, 
+            transfer_init, 
+            acceleration=acceleration,
+            step_tol=step_tol,
+            root_tol=root_tol,
+            max_iter=max_iter,
+        )[0]
 
-        # Calculate probabilities of agents being matched
-        prob_matched_X = self._prob_transfer_X(transfers)
-        prob_matched_Y = self._prob_transfer_Y(transfers)
-
-        # Calculate probabilities of agents being unmatched
-        prob_unmatched_X = 1 - jnp.sum(prob_matched_X, axis=self.exog.axisX, keepdims=True)
-        prob_unmatched_Y = 1 - jnp.sum(prob_matched_Y, axis=self.exog.axisY, keepdims=True)
-
-        # Calculate distribution of matched agents
-        matched = self.exog.nX * prob_matched_X
-
-        # Calculate distribution of unmatched agents
-        unmatched_X = self.exog.nX * prob_unmatched_X
-        unmatched_Y = self.exog.nY * prob_unmatched_Y
-
-        # Store equilibrium outcomes in dataclass
-        self.endog = EndogenousVariables(
-            transfers=transfers,
-
-            prob_matched_X=prob_matched_X,
-            prob_matched_Y=prob_matched_Y,
-
-            prob_unmatched_X=prob_unmatched_X,
-            prob_unmatched_Y=prob_unmatched_Y,
-
-            matched=matched,
-
-            unmatched_X=unmatched_X,
-            unmatched_Y=unmatched_Y
-        )
+        self.matches = self._Demand_X(self.transfer)
