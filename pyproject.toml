@@ -12,3 +12,8 @@ dependencies = [
     "FixedPointJAX>=0.0.25",
     "simple-pytree>=0.2.2",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+]

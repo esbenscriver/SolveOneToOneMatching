@@ -83,8 +83,8 @@ class MatchingModel(Pytree, mutable=True):
 
     def Solve(self,
             acceleration: str = "None",
-            step_tol: float = 1e-8,
-            root_tol: float = 1e-6,
+            step_tol: float = 1e-10,
+            root_tol: float = 1e-8,
             max_iter: int = 100_000
         ) -> None:
         """ Solve equilibrium transfers of matching model and store equilibrium outcomes
@@ -112,3 +112,9 @@ class MatchingModel(Pytree, mutable=True):
         )[0]
         self.transfer = transfer
         self.matches = self._Demand_X(transfer)
+
+    def test_excess_demand(self, transfer) -> None:
+        """ Check excess demand. """
+        demand_X = self._Demand_X(transfer)
+        demand_Y = self._Demand_Y(transfer)
+        assert jnp.allclose(demand_X, demand_Y), f"{jnp.linalg.norm(demand_X - demand_Y) = }"
