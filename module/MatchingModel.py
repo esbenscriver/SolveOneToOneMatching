@@ -12,9 +12,9 @@ from simple_pytree import Pytree, dataclass
 # import fixed-point iterator
 from FixedPointJAX import FixedPointRoot
 
-from module.DiscreteChoiceModel import LogitModel, NestedLogitModel
+from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, GeneralizedNestedLogitModel
 
-import sys
+ModelType = LogitModel | NestedLogitModel | GeneralizedNestedLogitModel
 
 @dataclass
 class MatchingModel(Pytree, mutable=True):
@@ -24,12 +24,12 @@ class MatchingModel(Pytree, mutable=True):
             - model_X: demand model for agents of type X
             - model_Y: demand model for agents of type X
     """
-    model_X: LogitModel|NestedLogitModel
-    model_Y: LogitModel|NestedLogitModel
+    model_X: ModelType
+    model_Y: ModelType
 
-    transfer: jnp.ndarray|None = None
-    matches: jnp.ndarray|None = None
-    K: jnp.ndarray|None = None
+    transfer: jnp.ndarray = jnp.empty((0,0))
+    matches: jnp.ndarray = jnp.empty((0,0))
+    K: jnp.ndarray = jnp.empty((0,0))
 
     @property
     def numberOfTypes_X(self) -> int:
