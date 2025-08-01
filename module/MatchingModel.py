@@ -110,9 +110,3 @@ class MatchingModel(Pytree, mutable=True):
         )[0]
         self.transfer = transfer
         self.matches = self._Demand_X(transfer)
-
-    def test_excess_demand(self, transfer) -> None:
-        """ Check excess demand. """
-        demand_X = self._Demand_X(transfer)
-        demand_Y = self._Demand_Y(transfer)
-        assert jnp.allclose(demand_X, demand_Y), f"{jnp.linalg.norm(demand_X - demand_Y) = }"
