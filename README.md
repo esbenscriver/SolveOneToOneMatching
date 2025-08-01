@@ -1,6 +1,6 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2409.05518-b31b1b.svg)](https://arxiv.org/pdf/2409.05518v3)
-![CI](https://github.com/esbenscriver/SolveOneToOneMatching/actions/workflows/test.yml/badge.svg)
+[![Test workflow](https://github.com/esbenscriver/SolveOneToOneMatching/actions/workflows/test.yml/badge.svg)](https://github.com/esbenscriver/SolveOneToOneMatching/actions)
 
 
 
