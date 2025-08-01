@@ -30,7 +30,7 @@ class LogitModel(Pytree, mutable=True):
         expV_inside = jnp.exp(v - v_max)
 
         # if outside option exists exponentiate the centered payoff
-        expV_outside = jnp.where(self.outside_option, jnp.exp(-v_max), 0.0)
+        expV_outside = jnp.where(self.outside_option, jnp.exp(-v_max), jnp.zeros_like(v_max))
 
         # denominator of choice probabilities
         denominator = expV_outside + jnp.sum(expV_inside, axis=self.axis, keepdims=True)
@@ -141,20 +141,20 @@ class GeneralizedNestedLogitModel(Pytree, mutable=True):
         expV_inside = jnp.exp((v - v_max))
 
         # if outside option exists exponentiate the centered payoff
-        expV_outside = jnp.where(self.outside_option, jnp.exp(-v_max.squeeze()), 0.0)
+        expV_outside = jnp.where(self.outside_option, jnp.exp(-v_max), jnp.zeros_like(v_max))
 
         nominator_ni_k = jnp.einsum('nj, jk -> njk', expV_inside, self.nesting_structure) ** (1 / nesting_parameter)
         denominator_ni_k = jnp.einsum('njk -> nk', nominator_ni_k)
         P_ni_k = nominator_ni_k / denominator_ni_k[:,None,:]
-        
+
         nominator_nk = denominator_ni_k ** self.nesting_parameter
-        denominator_nk = expV_outside + jnp.einsum('nk -> n', nominator_nk)
+        denominator_nk = expV_outside.squeeze() + jnp.einsum('nk -> n', nominator_nk)
         P_nk = nominator_nk / denominator_nk[:,None]
 
         P_inside = jnp.einsum('njk, nk -> nj', P_ni_k, P_nk)
-        P_outside = expV_outside / denominator_nk
+        P_outside = expV_outside / denominator_nk[:,None]
 
-        return P_inside, P_outside.squeeze()
+        return P_inside, P_outside
     
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
         """Compute demand for inside options."""
