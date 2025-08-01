@@ -6,7 +6,7 @@ Esben Scriver Andersen, Note on solving one-to-one matching models with linear t
 """
 import jax.numpy as jnp
 from simple_pytree import Pytree, dataclass
-
+import sys
 @dataclass
 class LogitModel(Pytree, mutable=True):
     utility: jnp.ndarray
@@ -23,7 +23,7 @@ class LogitModel(Pytree, mutable=True):
         return jnp.ones_like(self.scale, dtype=float)
 
     def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-        """Compute the logit choice probabilitie for the inside options."""
+        """Compute the logit choice probabilitie for inside and outside options."""
         v_max = jnp.max(v, axis=self.axis, keepdims=True)
 
         # exponentiated centered payoffs of inside options
@@ -74,25 +74,30 @@ class NestedLogitModel(Pytree, mutable=True):
         return self.nesting_parameter @ self.nesting_structure.T
 
     def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-        """Compute the nested logit choice probabilities for inside options."""
-        expV0 = jnp.where(self.outside_option, 1.0, 0.0)
-
+        """Compute the nested logit choice probabilities for inside and outside options."""
         # Explanation einsum indexes:
         # - n: index for agents' types
         # - j: index for alternatives (inside options)
         # - k: index for nests of alternatives (outside option is assumed to belong to its own nest)
 
         nesting_parameter = jnp.einsum('nk, jk -> nj', self.nesting_parameter, self.nesting_structure)
+
+        v_max = jnp.max(v, axis=self.axis, keepdims=True)
+
+        # exponentiated centered payoffs of inside options
+        expV_inside = jnp.exp((v - v_max) / nesting_parameter)
+
+        # if outside option exists exponentiate the centered payoff
+        expV_outside = jnp.where(self.outside_option, jnp.exp(-v_max), 0.0)
         
-        nominator_cond = jnp.exp(v / nesting_parameter) 
-        denominator_cond = jnp.einsum('nj, jk -> nk', nominator_cond, self.nesting_structure)
-        P_cond = nominator_cond / jnp.einsum('nk, jk -> nj', denominator_cond, self.nesting_structure)
+        denominator_cond = jnp.einsum('nj, jk -> nk', expV_inside, self.nesting_structure)
+        P_cond = expV_inside / jnp.einsum('nk, jk -> nj', denominator_cond, self.nesting_structure)
 
         nominator_nest = denominator_cond ** self.nesting_parameter
-        denominator_nest = expV0 + jnp.sum(nominator_nest, axis=self.axis, keepdims=True)
+        denominator_nest = expV_outside + jnp.sum(nominator_nest, axis=self.axis, keepdims=True)
         P_nest = jnp.einsum('nk, jk -> nj', nominator_nest, self.nesting_structure) / denominator_nest
 
-        P_outside = expV0 / denominator_nest
+        P_outside = expV_outside / denominator_nest
         return P_cond * P_nest, P_outside
     
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
@@ -121,26 +126,35 @@ class GeneralizedNestedLogitModel(Pytree, mutable=True):
         return jnp.min(self.nesting_parameter, axis=self.axis, keepdims=True)
 
     def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-        """Compute the nested logit choice probabilities for inside options."""
-        expV0 = jnp.where(self.outside_option, 1.0, 0.0)
+        """Compute the nested logit choice probabilities for inside and outside options."""
 
         # Explanation einsum indexes:
         # - n: index for agents' types
         # - j: index for alternatives (inside options)
         # - k: index for nests of alternatives (outside option is assumed to belong to its own nest)
 
-        nesting_parameter = jnp.einsum('nk, jk -> nj', self.nesting_parameter, self.nesting_structure)
+        nesting_parameter = self.nesting_parameter[:,None,:]
         
-        nominator_cond = jnp.exp(v / nesting_parameter) 
-        denominator_cond = jnp.einsum('nj, jk -> nk', nominator_cond, self.nesting_structure)
-        P_cond = nominator_cond / jnp.einsum('nk, jk -> nj', denominator_cond, self.nesting_structure)
+        v_max = jnp.max(v, axis=self.axis, keepdims=True)
 
-        nominator_nest = denominator_cond ** self.nesting_parameter
-        denominator_nest = expV0 + jnp.sum(nominator_nest, axis=self.axis, keepdims=True)
-        P_nest = jnp.einsum('nk, jk -> nj', nominator_nest, self.nesting_structure) / denominator_nest
+        # exponentiated centered payoffs of inside options
+        expV_inside = jnp.exp((v - v_max))
 
-        P_outside = expV0 / denominator_nest
-        return P_cond * P_nest, P_outside
+        # if outside option exists exponentiate the centered payoff
+        expV_outside = jnp.where(self.outside_option, jnp.exp(-v_max.squeeze()), 0.0)
+
+        nominator_ni_k = jnp.einsum('nj, jk -> njk', expV_inside, self.nesting_structure) ** (1 / nesting_parameter)
+        denominator_ni_k = jnp.einsum('njk -> nk', nominator_ni_k)
+        P_ni_k = nominator_ni_k / denominator_ni_k[:,None,:]
+        
+        nominator_nk = denominator_ni_k ** self.nesting_parameter
+        denominator_nk = expV_outside + jnp.einsum('nk -> n', nominator_nk)
+        P_nk = nominator_nk / denominator_nk[:,None]
+
+        P_inside = jnp.einsum('njk, nk -> nj', P_ni_k, P_nk)
+        P_outside = expV_outside / denominator_nk
+
+        return P_inside, P_outside.squeeze()
     
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
         """Compute demand for inside options."""

@@ -52,10 +52,8 @@ nesting_parameter_Y = random.uniform(key=random.PRNGKey(212), shape=(types_Y, ne
 print('-----------------------------------------------------------------------')
 print('1. Solve a matching model with logit demand:')
 
-model_X = LogitModel(utility=utility_X, scale=scale_X, n=n_X)
-prob_inside, prob_outside = model_X.ChoiceProbabilities(utility_X)
 model_logit = MatchingModel(
-  model_X = model_X,
+  model_X = LogitModel(utility=utility_X, scale=scale_X, n=n_X),
   model_Y = LogitModel(utility=utility_Y, scale=scale_Y, n=n_Y),  
 )
 

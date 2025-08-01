@@ -15,8 +15,8 @@ from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, Generalized
 
 def assert_model_outside_option_True(model_X: ModelType, model_name: str) -> None:
     choice_probabilities_inside, choice_probabilities_outside = model_X.ChoiceProbabilities(model_X.utility)
-    choice_probabilities_inside_sum = jnp.sum(choice_probabilities_inside, axis=model_X.axis, keepdims=True)
-    choice_probabilities_sum = choice_probabilities_inside_sum + choice_probabilities_outside
+    choice_probabilities_inside_sum = jnp.sum(choice_probabilities_inside, axis=model_X.axis)
+    choice_probabilities_sum = choice_probabilities_inside_sum + choice_probabilities_outside.squeeze()
 
     assert jnp.all(choice_probabilities_inside > 0.0), f"{model_name}: Choice probabilities less than zero: {jnp.min(choice_probabilities_inside) = }"
     assert jnp.all(choice_probabilities_inside < 1.0), f"{model_name}: Choice probabilities bigger than one: {jnp.max(choice_probabilities_inside) = }"
