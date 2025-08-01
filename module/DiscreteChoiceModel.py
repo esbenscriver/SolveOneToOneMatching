@@ -6,7 +6,7 @@ Esben Scriver Andersen, Note on solving one-to-one matching models with linear t
 """
 import jax.numpy as jnp
 from simple_pytree import Pytree, dataclass
-import sys
+
 @dataclass
 class LogitModel(Pytree, mutable=True):
     utility: jnp.ndarray
