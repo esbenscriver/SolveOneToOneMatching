@@ -22,9 +22,9 @@ jobs:
         run: |
           uv venv
           source .venv/bin/activate
-          uv install --extras dev
+          uv install --extras dev -e
 
       - name: Run tests
         run: |
           source .venv/bin/activate
-          PYTHONPATH=. pytest
+          pytest
