@@ -24,14 +24,17 @@ class LogitModel(Pytree, mutable=True):
 
     def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
         """Compute the logit choice probabilitie for the inside options."""
-        expV0 = jnp.where(self.outside_option, 1.0, 0.0)
+        v_max = jnp.max(v, axis=self.axis, keepdims=True)
 
-        # exponentiated payoffs of inside options (nominator)
-        nominator = jnp.exp(v)
+        # exponentiated centered payoffs of inside options
+        expV_inside = jnp.exp(v - v_max)
+
+        # if outside option exists exponentiate the centered payoff
+        expV_outside = jnp.where(self.outside_option, jnp.exp(-v_max), 0.0)
 
         # denominator of choice probabilities
-        denominator = expV0 + jnp.sum(nominator, axis=self.axis, keepdims=True)
-        return nominator / denominator, expV0 / denominator
+        denominator = expV_outside + jnp.sum(expV_inside, axis=self.axis, keepdims=True)
+        return expV_inside / denominator, expV_outside / denominator
     
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
         """Compute demand for inside options."""
