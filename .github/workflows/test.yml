@@ -22,7 +22,7 @@ jobs:
         run: |
           uv venv
           source .venv/bin/activate
-          uv install
+          uv install --extras dev
 
       - name: Run tests
         run: |
