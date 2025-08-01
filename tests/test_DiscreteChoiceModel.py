@@ -14,8 +14,7 @@ jax.config.update("jax_enable_x64", True)
 from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, GeneralizedNestedLogitModel, ModelType
 
 def assert_model_outside_option_True(model_X: ModelType, model_name: str) -> None:
-    choice_probabilities_inside = model_X.ChoiceProbabilities(model_X.utility)
-    choice_probabilities_outside = model_X.ChoiceProbabilities_outside_option(model_X.utility)
+    choice_probabilities_inside, choice_probabilities_outside = model_X.ChoiceProbabilities(model_X.utility)
     choice_probabilities_inside_sum = jnp.sum(choice_probabilities_inside, axis=model_X.axis, keepdims=True)
     choice_probabilities_sum = choice_probabilities_inside_sum + choice_probabilities_outside
 
@@ -29,8 +28,7 @@ def assert_model_outside_option_True(model_X: ModelType, model_name: str) -> Non
     assert jnp.allclose(choice_probabilities_sum, 1.0), f"{model_name}: Sum of choice probabilities does not sum to one: {jnp.min(choice_probabilities_sum) = }, {jnp.max(choice_probabilities_sum) = }"
 
 def assert_model_outside_option_False(model_X: ModelType, model_name: str) -> None:
-    choice_probabilities_inside = model_X.ChoiceProbabilities(model_X.utility)
-    choice_probabilities_outside = model_X.ChoiceProbabilities_outside_option(model_X.utility)
+    choice_probabilities_inside, choice_probabilities_outside = model_X.ChoiceProbabilities(model_X.utility)
     choice_probabilities_inside_sum = jnp.sum(choice_probabilities_inside, axis=model_X.axis)
 
     assert jnp.all(choice_probabilities_inside > 0.0), f"{model_name}: Choice probabilities less than zero: {jnp.min(choice_probabilities_inside) = }"
