@@ -1,31 +1,26 @@
-name: Set up environment and run tests
+name: Test workflow
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      - name: Install uv
-        run: pip install uv
-
-      - name: Create virtual environment with uv
-        run: uv venv .venv
-
-      - name: Install dependencies from pyproject.toml
-        run: .venv/bin/uv pip install -r pyproject.toml
-
-      - name: Install pytest (if not already in pyproject)
-        run: .venv/bin/uv pip install pytest
+      - name: Install dependencies
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv install
 
       - name: Run tests
-        run: .venv/bin/pytest
+        run: |
+          source .venv/bin/activate
+          pytest
