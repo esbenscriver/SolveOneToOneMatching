@@ -39,7 +39,7 @@ class LogitModel(Pytree, mutable=True):
 
     def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
         """Compute demand for outside option."""
-        return self.n - jnp.sum(self.Demand(v), axis=self.axis, keepdims=True)
+        return self.n * self.ChoiceProbabilities(v)[1]
 
 @dataclass
 class NestedLogitModel(Pytree, mutable=True):
@@ -98,7 +98,7 @@ class NestedLogitModel(Pytree, mutable=True):
 
     def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
         """Compute demand for outside option."""
-        return self.n - jnp.sum(self.Demand(v), axis=self.axis, keepdims=True)
+        return self.n * self.ChoiceProbabilities(v)[1]
 @dataclass
 class GeneralizedNestedLogitModel(Pytree, mutable=True):
     utility: jnp.ndarray
@@ -145,6 +145,6 @@ class GeneralizedNestedLogitModel(Pytree, mutable=True):
 
     def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
         """Compute demand for outside option."""
-        return self.n - jnp.sum(self.Demand(v), axis=self.axis, keepdims=True)
+        return self.n * self.ChoiceProbabilities(v)[1]
 
 ModelType = LogitModel | NestedLogitModel | GeneralizedNestedLogitModel
