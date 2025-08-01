@@ -12,10 +12,8 @@ from simple_pytree import Pytree, dataclass
 # import fixed-point iterator
 from FixedPointJAX import FixedPointRoot
 
-from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, GeneralizedNestedLogitModel
+from module.DiscreteChoiceModel import ModelType
 from typing import Optional
-
-ModelType = LogitModel | NestedLogitModel | GeneralizedNestedLogitModel
 
 @dataclass
 class MatchingModel(Pytree, mutable=True):
