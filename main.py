@@ -44,8 +44,8 @@ n_Y = random.uniform(key=random.PRNGKey(116), shape=(types_Y, 1)) + 1.0
 nests_X, nests_Y = 2, 3
 
 # Simulate nesting parameters
-nesting_parameter_X = random.uniform(key=random.PRNGKey(211), shape=(types_X, nests_Y))
-nesting_parameter_Y = random.uniform(key=random.PRNGKey(212), shape=(types_Y, nests_X))
+nesting_parameter_X = random.uniform(key=random.PRNGKey(211), shape=(types_X, nests_Y), minval=0.1, maxval=1.0)
+nesting_parameter_Y = random.uniform(key=random.PRNGKey(212), shape=(types_Y, nests_X), minval=0.1, maxval=1.0)
 
 print('-----------------------------------------------------------------------')
 print('1. Solve a matching model with logit demand:')

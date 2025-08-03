@@ -36,10 +36,10 @@ def test_solve() -> None:
             n_X = random.uniform(key=random.PRNGKey(113), shape=(types_X, 1))
             n_Y = random.uniform(key=random.PRNGKey(213), shape=(types_Y, 1)) + 1.0
             
-            nesting_parameter_X = random.uniform(key=random.PRNGKey(114), shape=(types_X, nests_Y))
+            nesting_parameter_X = random.uniform(key=random.PRNGKey(114), shape=(types_X, nests_Y), minval=0.1, maxval=1.0)
             nesting_structure_Y = random.dirichlet(key=random.PRNGKey(214), alpha=jnp.ones((nests_X,)), shape=(types_X,))
 
-            nesting_parameter_Y = random.uniform(key=random.PRNGKey(115), shape=(types_Y, nests_X))
+            nesting_parameter_Y = random.uniform(key=random.PRNGKey(115), shape=(types_Y, nests_X), minval=0.1, maxval=1.0)
             nesting_structure_X = random.dirichlet(key=random.PRNGKey(215), alpha=jnp.ones((nests_Y,)), shape=(types_Y,))
 
             for acceleration in ['None','SQUAREM']:
@@ -82,9 +82,9 @@ def test_solve() -> None:
                     ),
                 )
 
-                # model_nested_logit.Solve(acceleration=acceleration)
-                # scenario_nested_logit = f"Nested logit model: {types_X = }, {types_Y = }, {acceleration = }"
-                # assert_excess_demand(model_nested_logit, scenario_nested_logit)
+                model_nested_logit.Solve(acceleration=acceleration)
+                scenario_nested_logit = f"Nested logit model: {types_X = }, {types_Y = }, {acceleration = }"
+                assert_excess_demand(model_nested_logit, scenario_nested_logit)
 
                 print('-----------------------------------------------------------------------')
                 print('3. Solve a matching model with generalized nested logit demand:')
@@ -111,6 +111,6 @@ def test_solve() -> None:
                     ),
                 )
 
-                # model_GNL.Solve(acceleration=acceleration)
-                # scenario_GNL = f"GNL model: {types_X = }, {types_Y = }, {acceleration = }"
-                # assert_excess_demand(model_GNL, scenario_GNL)
+                model_GNL.Solve(acceleration=acceleration)
+                scenario_GNL = f"GNL model: {types_X = }, {types_Y = }, {acceleration = }"
+                assert_excess_demand(model_GNL, scenario_GNL)
