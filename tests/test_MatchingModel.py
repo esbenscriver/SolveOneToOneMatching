@@ -17,8 +17,8 @@ from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, Generalized
 def assert_excess_demand(matching_model: MatchingModel, scenario: str) -> None:
     """ Assert excess demand. """
     if matching_model.transfer != None:
-        demand_X = matching_model._Demand_X(matching_model.transfer)
-        demand_Y = matching_model._Demand_Y(matching_model.transfer)
+        demand_X = matching_model.Demand_X(matching_model.transfer)
+        demand_Y = matching_model.Demand_Y(matching_model.transfer)
         assert jnp.allclose(demand_X, demand_Y), f"Error in scenario ({scenario}): {jnp.linalg.norm(demand_X - demand_Y) = }"
 
 def test_solve() -> None:

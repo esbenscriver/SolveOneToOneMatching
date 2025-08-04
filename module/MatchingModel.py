@@ -43,19 +43,15 @@ class MatchingModel(Pytree, mutable=True):
         scale_adjustment_Y = self.model_Y.scale * self.model_Y.adjustment
         return (scale_adjustment_X * scale_adjustment_Y.T) / (scale_adjustment_X + scale_adjustment_Y.T)
 
-    def _v_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
-        return (self.model_X.utility + transfer) / self.model_X.scale
-    
-    def _v_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
-        return (self.model_Y.utility - transfer.T) / self.model_Y.scale
-
-    def _Demand_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
+    def Demand_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
         """ Computes choice probabilites of agents of type X."""
-        return self.model_X.Demand(self._v_X(transfer))
+        v_X = (self.model_X.utility + transfer) / self.model_X.scale
+        return self.model_X.Demand(v_X)
         
-    def _Demand_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
+    def Demand_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
         """ Computes choice probabilites of agents of type Y."""
-        return self.model_Y.Demand(self._v_Y(transfer)).T
+        v_Y = (self.model_Y.utility - transfer.T) / self.model_Y.scale
+        return self.model_Y.Demand(v_Y).T
 
     def _UpdateTransfers(self, t_initial: jnp.ndarray, adjustment: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
         """ Computes excess demand and updates fixed point equation for transfers
@@ -69,8 +65,8 @@ class MatchingModel(Pytree, mutable=True):
             - logratio: array containing the log-ratio of excess demand
         """
         # Calculate demand for both sides of the market
-        demand_X = self._Demand_X(t_initial) # type X's demand for type Y
-        demand_Y = self._Demand_Y(t_initial) # type Y's demand for type X
+        demand_X = self.Demand_X(t_initial) # type X's demand for type Y
+        demand_Y = self.Demand_Y(t_initial) # type Y's demand for type X
 
         # Calculate the log-ratio of excess demand for type X
         logratio = jnp.log(demand_Y / demand_X)
@@ -109,4 +105,4 @@ class MatchingModel(Pytree, mutable=True):
             max_iter=max_iter,
         )[0]
         self.transfer = transfer
-        self.matches = self._Demand_X(transfer)
+        self.matches = self.Demand_X(transfer)
