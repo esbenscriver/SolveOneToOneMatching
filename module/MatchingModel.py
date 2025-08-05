@@ -13,7 +13,6 @@ from simple_pytree import Pytree, dataclass
 from FixedPointJAX import FixedPointRoot
 
 from module.DiscreteChoiceModel import ModelType
-from typing import Optional
 
 @dataclass
 class MatchingModel(Pytree, mutable=True):
@@ -26,8 +25,8 @@ class MatchingModel(Pytree, mutable=True):
     model_X: ModelType
     model_Y: ModelType
 
-    transfer: Optional[jnp.ndarray] = None
-    matches: Optional[jnp.ndarray] = None
+    transfer: jnp.ndarray|None = None
+    matches: jnp.ndarray|None = None
 
     @property
     def numberOfTypes_X(self) -> int:

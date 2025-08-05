@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from simple_pytree import Pytree, dataclass
 
 @dataclass
-class LogitModel(Pytree, mutable=True):
+class LogitModel(Pytree, mutable=False):
     utility: jnp.ndarray
     scale: jnp.ndarray
 
@@ -45,7 +45,7 @@ class LogitModel(Pytree, mutable=True):
         return self.n * self.ChoiceProbabilities(v)[1]
 
 @dataclass
-class NestedLogitModel(Pytree, mutable=True):
+class NestedLogitModel(Pytree, mutable=False):
     utility: jnp.ndarray
     scale: jnp.ndarray
 
@@ -108,7 +108,7 @@ class NestedLogitModel(Pytree, mutable=True):
         """Compute demand for outside option."""
         return self.n * self.ChoiceProbabilities(v)[1]
 @dataclass
-class GeneralizedNestedLogitModel(Pytree, mutable=True):
+class GeneralizedNestedLogitModel(Pytree, mutable=False):
     utility: jnp.ndarray
     scale: jnp.ndarray
 
