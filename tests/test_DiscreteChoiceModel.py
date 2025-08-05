@@ -80,14 +80,14 @@ def test_NestedLogitModel_outside_option_True() -> None:
     n_X = random.uniform(key=random.PRNGKey(113), shape=(types_X, 1))
 
     nests_Y = 3
-    nesting_parameter_X = random.uniform(key=random.PRNGKey(114), shape=(types_X, nests_Y))
+    nest_parameter_X = random.uniform(key=random.PRNGKey(114), shape=(types_X, nests_Y))
 
     model_X = NestedLogitModel(
         utility=utility_X, 
         scale=scale_X,
 
-        nesting_index=jnp.arange(types_Y) % nests_Y,
-        nesting_parameter=nesting_parameter_X,
+        nest_index=jnp.arange(types_Y) % nests_Y,
+        nest_parameter=nest_parameter_X,
 
         n=n_X,
     )
@@ -103,15 +103,15 @@ def test_GeneralizedNestedLogitModel_outside_option_True() -> None:
     n_X = random.uniform(key=random.PRNGKey(113), shape=(types_X, 1))
 
     nests_Y = 3
-    nesting_parameter_X = random.uniform(key=random.PRNGKey(114), shape=(types_X, nests_Y))
-    nesting_structure_X = random.dirichlet(key=random.PRNGKey(115), alpha=jnp.ones((nests_Y,)), shape=(types_Y,))
+    nest_share_X = random.dirichlet(key=random.PRNGKey(114), alpha=jnp.ones((nests_Y,)), shape=(types_Y,))
+    nest_parameter_X = random.uniform(key=random.PRNGKey(115), shape=(types_X, nests_Y))
 
     model_X=GeneralizedNestedLogitModel(
         utility=utility_X, 
         scale=scale_X,
 
-        nesting_structure=nesting_structure_X,
-        nesting_parameter=nesting_parameter_X,
+        nest_share=nest_share_X,
+        nest_parameter=nest_parameter_X,
 
         n=n_X,
     )

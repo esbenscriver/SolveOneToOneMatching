@@ -43,9 +43,17 @@ n_Y = random.uniform(key=random.PRNGKey(116), shape=(types_Y, 1)) + 1.0
 # Set number of nests
 nests_X, nests_Y = 2, 3
 
-# Simulate nesting parameters
-nesting_parameter_X = random.uniform(key=random.PRNGKey(211), shape=(types_X, nests_Y), minval=0.1, maxval=1.0)
-nesting_parameter_Y = random.uniform(key=random.PRNGKey(212), shape=(types_Y, nests_X), minval=0.1, maxval=1.0)
+# Set nesting index (used for nested logit model)
+nest_index_X = jnp.arange(types_Y) % nests_Y
+nest_index_Y = jnp.arange(types_X) % nests_X
+
+# Simulate nesting parameters (used for nested logit and generalized nested logit model)
+nest_parameter_X = random.uniform(key=random.PRNGKey(211), shape=(types_X, nests_Y), minval=0.1, maxval=1.0)
+nest_parameter_Y = random.uniform(key=random.PRNGKey(212), shape=(types_Y, nests_X), minval=0.1, maxval=1.0)
+
+# Simulate nesting structure of the generalized nested logit model
+nest_share_X = random.dirichlet(key=random.PRNGKey(311), alpha=jnp.ones((nests_Y,)), shape=(types_Y,))
+nest_share_Y = random.dirichlet(key=random.PRNGKey(312), alpha=jnp.ones((nests_X,)), shape=(types_X,))
 
 print('-----------------------------------------------------------------------')
 print('1. Solve a matching model with logit demand:')
@@ -65,8 +73,8 @@ model_nested_logit = MatchingModel(
     utility=utility_X, 
     scale=scale_X,
 
-    nesting_index=jnp.arange(types_Y) % nests_Y,
-    nesting_parameter=nesting_parameter_X,
+    nest_index=nest_index_X,
+    nest_parameter=nest_parameter_X,
 
     n=n_X,
   ),
@@ -75,8 +83,8 @@ model_nested_logit = MatchingModel(
     utility=utility_Y, 
     scale=scale_Y,
 
-    nesting_index=jnp.arange(types_X) % nests_X,
-    nesting_parameter=nesting_parameter_Y,
+    nest_index=nest_index_Y,
+    nest_parameter=nest_parameter_Y,
 
     n=n_Y,
   ),
@@ -92,8 +100,8 @@ model_GNL = MatchingModel(
     utility=utility_X, 
     scale=scale_X,
 
-    nesting_structure=random.dirichlet(key=random.PRNGKey(311), alpha=jnp.ones((nests_Y,)), shape=(types_Y,)),
-    nesting_parameter=nesting_parameter_X,
+    nest_share=nest_share_X,
+    nest_parameter=nest_parameter_X,
 
     n=n_X,
   ),
@@ -102,8 +110,8 @@ model_GNL = MatchingModel(
     utility=utility_Y, 
     scale=scale_Y,
 
-    nesting_structure=random.dirichlet(key=random.PRNGKey(312), alpha=jnp.ones((nests_X,)), shape=(types_X,)),
-    nesting_parameter=nesting_parameter_Y,
+    nest_share=nest_share_Y,
+    nest_parameter=nest_parameter_Y,
 
     n=n_Y,
   ),

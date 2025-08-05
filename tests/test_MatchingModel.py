@@ -36,11 +36,11 @@ def test_solve() -> None:
             n_X = random.uniform(key=random.PRNGKey(113), shape=(types_X, 1))
             n_Y = random.uniform(key=random.PRNGKey(213), shape=(types_Y, 1)) + 1.0
             
-            nesting_parameter_X = random.uniform(key=random.PRNGKey(114), shape=(types_X, nests_Y), minval=0.1, maxval=1.0)
-            nesting_structure_Y = random.dirichlet(key=random.PRNGKey(214), alpha=jnp.ones((nests_X,)), shape=(types_X,))
+            nest_parameter_X = random.uniform(key=random.PRNGKey(114), shape=(types_X, nests_Y), minval=0.1, maxval=1.0)
+            nest_share_Y = random.dirichlet(key=random.PRNGKey(214), alpha=jnp.ones((nests_X,)), shape=(types_X,))
 
-            nesting_parameter_Y = random.uniform(key=random.PRNGKey(115), shape=(types_Y, nests_X), minval=0.1, maxval=1.0)
-            nesting_structure_X = random.dirichlet(key=random.PRNGKey(215), alpha=jnp.ones((nests_Y,)), shape=(types_Y,))
+            nest_parameter_Y = random.uniform(key=random.PRNGKey(115), shape=(types_Y, nests_X), minval=0.1, maxval=1.0)
+            nest_share_X = random.dirichlet(key=random.PRNGKey(215), alpha=jnp.ones((nests_Y,)), shape=(types_Y,))
 
             for acceleration in ['None','SQUAREM']:
                 print('-----------------------------------------------------------------------')
@@ -65,8 +65,8 @@ def test_solve() -> None:
                         utility=utility_X, 
                         scale=scale_X,
 
-                        nesting_index=jnp.arange(types_Y) % nests_Y,
-                        nesting_parameter=nesting_parameter_X,
+                        nest_index=jnp.arange(types_Y) % nests_Y,
+                        nest_parameter=nest_parameter_X,
 
                         n=n_X,
                     ),
@@ -75,8 +75,8 @@ def test_solve() -> None:
                         utility=utility_Y, 
                         scale=scale_Y,
 
-                        nesting_index=jnp.arange(types_X) % nests_X,
-                        nesting_parameter=nesting_parameter_Y,
+                        nest_index=jnp.arange(types_X) % nests_X,
+                        nest_parameter=nest_parameter_Y,
 
                         n=n_Y,
                     ),
@@ -94,8 +94,8 @@ def test_solve() -> None:
                         utility=utility_X,
                         scale=scale_X,
 
-                        nesting_structure=nesting_structure_X,
-                        nesting_parameter=nesting_parameter_X,
+                        nest_share=nest_share_X,
+                        nest_parameter=nest_parameter_X,
 
                         n=n_X,
                     ),
@@ -104,8 +104,8 @@ def test_solve() -> None:
                         utility=utility_Y, 
                         scale=scale_Y,
 
-                        nesting_structure=nesting_structure_Y,
-                        nesting_parameter=nesting_parameter_Y,
+                        nest_share=nest_share_Y,
+                        nest_parameter=nest_parameter_Y,
 
                         n=n_Y,
                     ),
