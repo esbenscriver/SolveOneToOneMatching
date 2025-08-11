@@ -14,12 +14,12 @@ import jax
 import jax.numpy as jnp
 from jax import random
 
-# Increase precision to 64 bit
-jax.config.update("jax_enable_x64", True)
-
 # import solver for one-to-one matching model
 from module.MatchingModel import MatchingModel
 from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, GeneralizedNestedLogitModel
+
+# Increase precision to 64 bit
+jax.config.update("jax_enable_x64", True)
 
 # choose accelerator of fixed-point iterations
 acceleration = "None"

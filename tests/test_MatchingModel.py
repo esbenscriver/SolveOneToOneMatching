@@ -1,22 +1,21 @@
 """
 test module/MatchingModel.py
 """
-
 # import JAX
 import jax
 import jax.numpy as jnp
 from jax import random
 
-# Increase precision to 64 bit
-jax.config.update("jax_enable_x64", True)
-
 # import solver for one-to-one matching model
 from module.MatchingModel import MatchingModel
 from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, GeneralizedNestedLogitModel
 
+# Increase precision to 64 bit
+jax.config.update("jax_enable_x64", True)
+
 def assert_excess_demand(matching_model: MatchingModel, scenario: str) -> None:
     """ Assert excess demand. """
-    if matching_model.transfer != None:
+    if matching_model.transfer is not None:
         demand_X = matching_model.Demand_X(matching_model.transfer)
         demand_Y = matching_model.Demand_Y(matching_model.transfer)
         assert jnp.allclose(demand_X, demand_Y), f"Error in scenario ({scenario}): {jnp.linalg.norm(demand_X - demand_Y) = }"

@@ -92,7 +92,8 @@ class MatchingModel(Pytree, mutable=True):
         # Initial guess for transfer
         transfer_init = jnp.zeros((self.numberOfTypes_X, self.numberOfTypes_Y))
 
-        fixed_point = lambda t: self._UpdateTransfers(t, self.adjustment)
+        def fixed_point(t) -> tuple[jnp.ndarray, jnp.ndarray]:
+            return self._UpdateTransfers(t, self.adjustment)
 
         # Find equilibrium transfer by fixed-point iterations
         transfer = FixedPointRoot(

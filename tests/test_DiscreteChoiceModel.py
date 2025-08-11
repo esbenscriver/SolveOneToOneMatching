@@ -7,11 +7,11 @@ import jax
 import jax.numpy as jnp
 from jax import random
 
-# Increase precision to 64 bit
-jax.config.update("jax_enable_x64", True)
-
 # import solver for one-to-one matching model
 from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, GeneralizedNestedLogitModel, ModelType
+
+# Increase precision to 64 bit
+jax.config.update("jax_enable_x64", True)
 
 def assert_model_outside_option_True(model_X: ModelType, model_name: str) -> None:
     choice_probabilities_inside, choice_probabilities_outside = model_X.ChoiceProbabilities(model_X.utility)
