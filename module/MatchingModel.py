@@ -37,7 +37,7 @@ class MatchingModel(Pytree, mutable=True):
         return self.model_Y.n.size
 
     @property
-    def adjustment(self) -> jnp.ndarray:
+    def adjust_step(self) -> jnp.ndarray:
         scale_adjustment_X = self.model_X.scale * self.model_X.adjustment
         scale_adjustment_Y = self.model_Y.scale * self.model_Y.adjustment
         return (scale_adjustment_X * scale_adjustment_Y.T) / (scale_adjustment_X + scale_adjustment_Y.T)
@@ -52,12 +52,12 @@ class MatchingModel(Pytree, mutable=True):
         v_Y = (self.model_Y.utility - transfer.T) / self.model_Y.scale
         return self.model_Y.Demand(v_Y).T
 
-    def _UpdateTransfers(self, t_initial: jnp.ndarray, adjustment: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+    def UpdateTransfers(self, t_initial: jnp.ndarray, adjust_step: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
         """ Computes excess demand and updates fixed point equation for transfers
 
             Inputs:
             - t_initial: array containing initial transfers
-            - adjustment: array contining adjustment terms for step lenght
+            - adjust_step: array contining adjustment terms for step lenght
 
             Outputs:
             - t_updated: array containing the updated transfers
@@ -71,7 +71,7 @@ class MatchingModel(Pytree, mutable=True):
         logratio = jnp.log(demand_Y / demand_X)
 
         # Update transfer
-        t_updated = t_initial + adjustment * logratio
+        t_updated = t_initial + adjust_step * logratio
         return t_updated, logratio
 
     def Solve(self,
@@ -92,8 +92,8 @@ class MatchingModel(Pytree, mutable=True):
         # Initial guess for transfer
         transfer_init = jnp.zeros((self.numberOfTypes_X, self.numberOfTypes_Y))
 
-        def fixed_point(t) -> tuple[jnp.ndarray, jnp.ndarray]:
-            return self._UpdateTransfers(t, self.adjustment)
+        def fixed_point(t: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+            return self.UpdateTransfers(t, self.adjust_step)
 
         # Find equilibrium transfer by fixed-point iterations
         transfer = FixedPointRoot(
