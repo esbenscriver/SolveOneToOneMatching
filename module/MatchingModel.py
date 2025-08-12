@@ -21,6 +21,8 @@ class MatchingModel(Pytree, mutable=True):
         - Inputs:
             - model_X: demand model for agents of type X
             - model_Y: demand model for agents of type Y
+            - transfer: transfer between agents when matched
+            - matches: number of matches between agents of different types
     """
     model_X: ModelType
     model_Y: ModelType

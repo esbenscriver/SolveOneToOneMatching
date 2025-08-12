@@ -9,6 +9,15 @@ from simple_pytree import Pytree, dataclass
 
 @dataclass
 class LogitModel(Pytree, mutable=False):
+    """ Logit discrete choice model
+    
+        - Inputs:
+            - utility (jnp.ndarray): choice-specific utilities
+            - scale (jnp.ndarray): scale parameter
+            - n (jnp.ndarray): distribution of agents
+            - outside_option (bool): indicator for whether outside option is included
+
+    """
     utility: jnp.ndarray
     scale: jnp.ndarray
 
@@ -46,6 +55,17 @@ class LogitModel(Pytree, mutable=False):
 
 @dataclass
 class NestedLogitModel(Pytree, mutable=False):
+    """ Nested logit discrete choice model
+    
+        - Inputs:
+            - utility (jnp.ndarray): choice-specific utilities
+            - scale (jnp.ndarray): scale parameter
+            - nest_index (jnp.ndarray): index of nest that the alternatives belong to
+            - nest_parameter (jnp.ndarray): nesting parameter
+            - n (jnp.ndarray): distribution of agents
+            - outside_option (bool): indicator for whether outside option is included
+
+    """
     utility: jnp.ndarray
     scale: jnp.ndarray
 
@@ -109,6 +129,17 @@ class NestedLogitModel(Pytree, mutable=False):
         return self.n * self.ChoiceProbabilities(v)[1]
 @dataclass
 class GeneralizedNestedLogitModel(Pytree, mutable=False):
+    """ Generalized nested logit discrete choice model
+    
+        - Inputs:
+            - utility (jnp.ndarray): choice-specific utilities
+            - scale (jnp.ndarray): scale parameter
+            - nest_share (jnp.ndarray): share that the alternatives belong to each nest
+            - nest_parameter (jnp.ndarray): nesting parameter
+            - n (jnp.ndarray): distribution of agents
+            - outside_option (bool): indicator for whether outside option is included
+
+    """
     utility: jnp.ndarray
     scale: jnp.ndarray
 
