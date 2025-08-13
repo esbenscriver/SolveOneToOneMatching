@@ -1,6 +1,6 @@
 [project]
 name = "SolveOneToOneMatching"
-version = "0.1.1"
+version = "0.1.2"
 description = "JAX implementation of fixed-point iteration algoritm to solve one-to-one matching model with transferable utility"
 authors = [
     { name="Esben Scriver Andersen", email="esbenscriver@gmail.com" }
