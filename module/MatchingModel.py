@@ -15,7 +15,12 @@ from FixedPointJAX import FixedPointRoot
 from module.DiscreteChoiceModel import ModelType
 
 @dataclass
-class MatchingModel(Pytree, mutable=True):
+class Solution(Pytree, mutable=False):
+    transfer: jnp.ndarray
+    matches: jnp.ndarray
+
+@dataclass
+class MatchingModel(Pytree, mutable=False):
     """ Matching model
 
         - Inputs:
@@ -26,9 +31,6 @@ class MatchingModel(Pytree, mutable=True):
     """
     model_X: ModelType
     model_Y: ModelType
-
-    transfer: jnp.ndarray|None = None
-    matches: jnp.ndarray|None = None
 
     @property
     def numberOfTypes_X(self) -> int:
@@ -81,7 +83,7 @@ class MatchingModel(Pytree, mutable=True):
             step_tol: float = 1e-10,
             root_tol: float = 1e-8,
             max_iter: int = 100_000
-        ) -> None:
+        ) -> Solution:
         """ Solve equilibrium transfers of matching model and store equilibrium outcomes
         
             - Inputs:
@@ -106,5 +108,4 @@ class MatchingModel(Pytree, mutable=True):
             root_tol=root_tol,
             max_iter=max_iter,
         )[0]
-        self.transfer = transfer
-        self.matches = self.Demand_X(transfer)
+        return Solution(transfer=transfer, matches=self.Demand_X(transfer))

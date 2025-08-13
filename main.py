@@ -63,7 +63,7 @@ model_logit = MatchingModel(
   model_Y = LogitModel(utility=utility_Y, scale=scale_Y, n=n_Y),  
 )
 
-model_logit.Solve(acceleration=acceleration)
+solution_logit = model_logit.Solve(acceleration=acceleration)
 
 print('-----------------------------------------------------------------------')
 print('2. Solve a matching model with nested logit demand:')
@@ -90,7 +90,7 @@ model_nested_logit = MatchingModel(
   ),
 )
 
-model_nested_logit.Solve(acceleration=acceleration)
+solution_nested_logit = model_nested_logit.Solve(acceleration=acceleration)
 
 print('-----------------------------------------------------------------------')
 print('3. Solve a matching model with generalized nested logit demand:')
@@ -117,4 +117,4 @@ model_GNL = MatchingModel(
   ),
 )
 
-model_GNL.Solve(acceleration=acceleration)
+solution_GNL = model_GNL.Solve(acceleration=acceleration)

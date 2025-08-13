@@ -7,18 +7,17 @@ import jax.numpy as jnp
 from jax import random
 
 # import solver for one-to-one matching model
-from module.MatchingModel import MatchingModel
+from module.MatchingModel import MatchingModel, Solution
 from module.DiscreteChoiceModel import LogitModel, NestedLogitModel, GeneralizedNestedLogitModel
 
 # Increase precision to 64 bit
 jax.config.update("jax_enable_x64", True)
 
-def assert_excess_demand(matching_model: MatchingModel, scenario: str) -> None:
+def assert_excess_demand(matching_model: MatchingModel, solution: Solution, scenario: str) -> None:
     """ Assert excess demand. """
-    if matching_model.transfer is not None:
-        demand_X = matching_model.Demand_X(matching_model.transfer)
-        demand_Y = matching_model.Demand_Y(matching_model.transfer)
-        assert jnp.allclose(demand_X, demand_Y), f"Error in scenario ({scenario}): {jnp.linalg.norm(demand_X - demand_Y) = }"
+    demand_X = matching_model.Demand_X(solution.transfer)
+    demand_Y = matching_model.Demand_Y(solution.transfer)
+    assert jnp.allclose(demand_X, demand_Y), f"Error in scenario ({scenario}): {jnp.linalg.norm(demand_X - demand_Y) = }"
 
 def test_solve() -> None:
     nests_X, nests_Y = 2, 3
@@ -52,9 +51,9 @@ def test_solve() -> None:
                 model_Y = LogitModel(utility=utility_Y, scale=scale_Y, n=n_Y),  
                 )
 
-                model_logit.Solve(acceleration=acceleration)
+                solution_logit = model_logit.Solve(acceleration=acceleration)
                 scenario_logit = f"Logit model: {types_X = }, {types_Y = }, {acceleration = }"
-                assert_excess_demand(model_logit, scenario_logit)
+                assert_excess_demand(model_logit, solution_logit, scenario_logit)
 
                 print('-----------------------------------------------------------------------')
                 print('2. Solve a matching model with nested logit demand:')
@@ -81,9 +80,9 @@ def test_solve() -> None:
                     ),
                 )
 
-                model_nested_logit.Solve(acceleration=acceleration)
+                solution_nested_logit = model_nested_logit.Solve(acceleration=acceleration)
                 scenario_nested_logit = f"Nested logit model: {types_X = }, {types_Y = }, {acceleration = }"
-                assert_excess_demand(model_nested_logit, scenario_nested_logit)
+                assert_excess_demand(model_nested_logit, solution_nested_logit, scenario_nested_logit)
 
                 print('-----------------------------------------------------------------------')
                 print('3. Solve a matching model with generalized nested logit demand:')
@@ -110,6 +109,6 @@ def test_solve() -> None:
                     ),
                 )
 
-                model_GNL.Solve(acceleration=acceleration)
+                solution_GNL = model_GNL.Solve(acceleration=acceleration)
                 scenario_GNL = f"GNL model: {types_X = }, {types_Y = }, {acceleration = }"
-                assert_excess_demand(model_GNL, scenario_GNL)
+                assert_excess_demand(model_GNL, solution_GNL, scenario_GNL)
