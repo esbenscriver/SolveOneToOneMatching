@@ -1,6 +1,6 @@
 [project]
 name = "SolveOneToOneMatching"
-version = "0.1.0"
+version = "0.1.1"
 description = "JAX implementation of fixed-point iteration algoritm to solve one-to-one matching model with transferable utility"
 authors = [
     { name="Esben Scriver Andersen", email="esbenscriver@gmail.com" }
@@ -9,8 +9,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "jax>=0.6.2",
-    "FixedPointJAX>=0.0.25",
     "simple-pytree>=0.2.2",
+    "fxp-jax>=0.1.20",
 ]
 
 [dependency-groups]

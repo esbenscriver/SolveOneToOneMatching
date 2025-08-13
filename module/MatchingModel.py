@@ -10,7 +10,7 @@ import jax.numpy as jnp
 from simple_pytree import Pytree, dataclass
 
 # import fixed-point iterator
-from FixedPointJAX import FixedPointRoot
+from fxp_jax import fxp_root
 
 from module.DiscreteChoiceModel import ModelType
 
@@ -100,12 +100,10 @@ class MatchingModel(Pytree, mutable=False):
             return self.UpdateTransfers(t, self.adjust_step)
 
         # Find equilibrium transfer by fixed-point iterations
-        transfer = FixedPointRoot(
-            fixed_point, 
-            transfer_init, 
-            acceleration=acceleration,
+        result = fxp_root(
+            fixed_point,
             step_tol=step_tol,
             root_tol=root_tol,
             max_iter=max_iter,
-        )[0]
-        return Solution(transfer=transfer, matches=self.Demand_X(transfer))
+        ).solve(guess=transfer_init, accelerator=acceleration)
+        return Solution(transfer=result.x, matches=self.Demand_X(result.x))
