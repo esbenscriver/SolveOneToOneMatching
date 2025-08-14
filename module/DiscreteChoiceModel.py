@@ -2,7 +2,7 @@
 JAX implementation of discrete choice models
 
 Reference:
-Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2025 (https://arxiv.org/pdf/2409.05518v3)
+Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2025 (https://arxiv.org/pdf/2409.05518)
 """
 import jax.numpy as jnp
 from simple_pytree import Pytree, dataclass

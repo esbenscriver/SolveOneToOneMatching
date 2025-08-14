@@ -1,5 +1,5 @@
 
-[![arXiv](https://img.shields.io/badge/arXiv-2409.05518-b31b1b.svg)](https://arxiv.org/pdf/2409.05518v3)
+[![arXiv](https://img.shields.io/badge/arXiv-2409.05518-b31b1b.svg)](https://arxiv.org/pdf/2409.05518)
 [![CI](https://github.com/esbenscriver/SolveOneToOneMatching/actions/workflows/ci.yml/badge.svg)](https://github.com/esbenscriver/SolveOneToOneMatching/actions/workflows/ci.yml)
 [![CD](https://github.com/esbenscriver/SolveOneToOneMatching/actions/workflows/cd.yml/badge.svg)](https://github.com/esbenscriver/SolveOneToOneMatching/actions/workflows/cd.yml)
 
@@ -14,7 +14,7 @@ The main script, MatchingModel.py, sets up and solves a general system of fixed-
  - Generalized nested logit model
 
 # Citations
-If you use this script in your research, I ask that you also cite [Andersen (2025)](https://arxiv.org/pdf/2409.05518v3).
+If you use this script in your research, I ask that you also cite [Andersen (2025)](https://arxiv.org/pdf/2409.05518).
 
 
     @article{andersen2025note,
@@ -24,7 +24,7 @@ If you use this script in your research, I ask that you also cite [Andersen (202
       eprint={2409.05518},
       archivePrefix={arXiv},
       primaryClass={econ.GN},
-      url={https://arxiv.org/pdf/2409.05518v3}, 
+      url={https://arxiv.org/pdf/2409.05518}, 
     }
 
 # Dependencies
