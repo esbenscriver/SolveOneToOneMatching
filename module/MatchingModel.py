@@ -16,6 +16,12 @@ from module.DiscreteChoiceModel import ModelType
 
 @dataclass
 class Solution(Pytree, mutable=False):
+    """ Solution of matching model
+
+        Attributes:
+            transfer (jnp.ndarray): equilibrium transfer
+            matches (jnp.ndarray): equilibrium number of matches
+    """
     transfer: jnp.ndarray
     matches: jnp.ndarray
 
@@ -23,11 +29,9 @@ class Solution(Pytree, mutable=False):
 class MatchingModel(Pytree, mutable=False):
     """ Matching model
 
-        - Inputs:
-            - model_X: demand model for agents of type X
-            - model_Y: demand model for agents of type Y
-            - transfer: transfer between agents when matched
-            - matches: number of matches between agents of different types
+        Attributes:
+            model_X (ModelType): demand model for agents of type X
+            model_Y (ModelType): demand model for agents of type Y
     """
     model_X: ModelType
     model_Y: ModelType
