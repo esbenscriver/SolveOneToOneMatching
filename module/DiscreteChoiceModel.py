@@ -10,12 +10,12 @@ from simple_pytree import Pytree, dataclass
 @dataclass
 class LogitModel(Pytree, mutable=False):
     """ Logit discrete choice model
-    
-        - Inputs:
-            - utility (jnp.ndarray): choice-specific utilities
-            - scale (jnp.ndarray): scale parameter
-            - n (jnp.ndarray): distribution of agents
-            - outside_option (bool): indicator for whether outside option is included
+
+        Args:
+            utility (jnp.ndarray): choice-specific utilities
+            scale (jnp.ndarray): scale parameter
+            n (jnp.ndarray): distribution of agents
+            outside_option (bool): indicator for whether outside option is included
 
     """
     utility: jnp.ndarray
@@ -32,7 +32,17 @@ class LogitModel(Pytree, mutable=False):
         return jnp.ones_like(self.scale, dtype=float)
 
     def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-        """Compute the logit choice probabilitie for inside and outside options."""
+        """ Compute the logit choice probabilities for inside and outside options
+        
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+            P_inside (jnp.ndarray): 
+                choice probabilities of inside options.
+            P_outside (jnp.ndarray): 
+                choice probabilities of outside option.
+        """
         v_max = jnp.max(v, axis=self.axis, keepdims=True)
 
         # exponentiated centered payoffs of inside options
@@ -46,24 +56,40 @@ class LogitModel(Pytree, mutable=False):
         return expV_inside / denominator, expV_outside / denominator
     
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for inside options."""
+        """Compute demand for inside options
+            
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+                demand (jnp.ndarray): choice-specific demand
+
+        """
         return self.n * self.ChoiceProbabilities(v)[0]
 
     def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for outside option."""
+        """Compute demand for outside option
+            
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+                demand (jnp.ndarray): demand for outside option
+
+        """
         return self.n * self.ChoiceProbabilities(v)[1]
 
 @dataclass
 class NestedLogitModel(Pytree, mutable=False):
     """ Nested logit discrete choice model
-    
-        - Inputs:
-            - utility (jnp.ndarray): choice-specific utilities
-            - scale (jnp.ndarray): scale parameter
-            - nest_index (jnp.ndarray): index of nest that the alternatives belong to
-            - nest_parameter (jnp.ndarray): nesting parameter
-            - n (jnp.ndarray): distribution of agents
-            - outside_option (bool): indicator for whether outside option is included
+
+        Args:
+            utility (jnp.ndarray): choice-specific utilities
+            scale (jnp.ndarray): scale parameter
+            nest_index (jnp.ndarray): index of nest that the alternatives belong to
+            nest_parameter (jnp.ndarray): nesting parameter
+            n (jnp.ndarray): distribution of agents
+            outside_option (bool): indicator for whether outside option is included
 
     """
     utility: jnp.ndarray
@@ -94,7 +120,17 @@ class NestedLogitModel(Pytree, mutable=False):
         return self.nest_parameter @ self.nest_structure.T
 
     def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-        """Compute the nested logit choice probabilities for inside and outside options."""
+        """ Compute the nested logit choice probabilities for inside and outside options
+        
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+            P_inside (jnp.ndarray): 
+                choice probabilities of inside options.
+            P_outside (jnp.ndarray): 
+                choice probabilities of outside option.
+        """
         # Explanation einsum indexes:
         # - n: index for agents' types
         # - j: index for alternatives (inside options)
@@ -121,23 +157,39 @@ class NestedLogitModel(Pytree, mutable=False):
         return P_cond * P_nest, P_outside
     
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for inside options."""
+        """Compute demand for inside options
+            
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+                demand (jnp.ndarray): choice-specific demand
+
+        """
         return self.n * self.ChoiceProbabilities(v)[0]
 
     def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for outside option."""
+        """Compute demand for outside option
+            
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+                demand (jnp.ndarray): demand for outside option
+
+        """
         return self.n * self.ChoiceProbabilities(v)[1]
 @dataclass
 class GeneralizedNestedLogitModel(Pytree, mutable=False):
     """ Generalized nested logit discrete choice model
-    
-        - Inputs:
-            - utility (jnp.ndarray): choice-specific utilities
-            - scale (jnp.ndarray): scale parameter
-            - nest_share (jnp.ndarray): share that the alternatives belong to each nest
-            - nest_parameter (jnp.ndarray): nesting parameter
-            - n (jnp.ndarray): distribution of agents
-            - outside_option (bool): indicator for whether outside option is included
+
+        Args:
+            utility (jnp.ndarray): choice-specific utilities
+            scale (jnp.ndarray): scale parameter
+            nest_share (jnp.ndarray): share that the alternatives belong to each nest
+            nest_parameter (jnp.ndarray): nesting parameter
+            n (jnp.ndarray): distribution of agents
+            outside_option (bool): indicator for whether outside option is included
 
     """
     utility: jnp.ndarray
@@ -157,7 +209,17 @@ class GeneralizedNestedLogitModel(Pytree, mutable=False):
         return jnp.min(self.nest_parameter, axis=self.axis, keepdims=True)
 
     def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-        """Compute the nested logit choice probabilities for inside and outside options."""
+        """ Compute the generalized nested logit choice probabilities for inside and outside options
+        
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+            P_inside (jnp.ndarray): 
+                choice probabilities of inside options.
+            P_outside (jnp.ndarray): 
+                choice probabilities of outside option.
+        """
 
         # Explanation einsum indexes:
         # - n: index for agents' types
@@ -188,11 +250,27 @@ class GeneralizedNestedLogitModel(Pytree, mutable=False):
         return P_inside, P_outside
     
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for inside options."""
+        """Compute demand for inside options
+            
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+                demand (jnp.ndarray): choice-specific demand
+
+        """
         return self.n * self.ChoiceProbabilities(v)[0]
 
     def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for outside option."""
+        """Compute demand for outside option
+            
+            Args:
+                v (jnp.ndarray): choice-specific payoffs
+
+            Returns:
+                demand (jnp.ndarray): demand for outside option
+
+        """
         return self.n * self.ChoiceProbabilities(v)[1]
 
 ModelType = LogitModel | NestedLogitModel | GeneralizedNestedLogitModel

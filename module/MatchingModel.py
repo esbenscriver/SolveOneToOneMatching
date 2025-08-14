@@ -47,25 +47,43 @@ class MatchingModel(Pytree, mutable=False):
         return (scale_adjustment_X * scale_adjustment_Y.T) / (scale_adjustment_X + scale_adjustment_Y.T)
 
     def Demand_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
-        """ Computes choice probabilites of agents of type X."""
+        """ Computes agents of type X's demand for agents of type Y
+            
+            Args:
+                transfer (jnp.ndarray): match-specific transfers
+
+            Returns:
+                demand (jnp.ndarray): match-specific demand
+
+        """
         v_X = (self.model_X.utility + transfer) / self.model_X.scale
         return self.model_X.Demand(v_X)
         
     def Demand_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
-        """ Computes choice probabilites of agents of type Y."""
+        """ Computes agents of type Y's demand for agents of type X
+            
+            Args:
+                transfer (jnp.ndarray): match-specific transfers
+
+            Returns:
+                demand (jnp.ndarray): match-specific demand
+
+        """
         v_Y = (self.model_Y.utility - transfer.T) / self.model_Y.scale
         return self.model_Y.Demand(v_Y).T
 
     def UpdateTransfers(self, t_initial: jnp.ndarray, adjust_step: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
         """ Computes excess demand and updates fixed point equation for transfers
 
-            Inputs:
-            - t_initial: array containing initial transfers
-            - adjust_step: array contining adjustment terms for step lenght
+            Args:
+                t_initial (jnp.ndarray): initial transfers
+                adjust_step (jnp.ndarray): adjustment terms for step lenght
 
-            Outputs:
-            - t_updated: array containing the updated transfers
-            - logratio: array containing the log-ratio of excess demand
+            Returns:
+            t_updated (jnp.ndarray): 
+                updated transfer.
+            logratio (jnp.ndarray): 
+                log-ratio of excess demand.
         """
         # Calculate demand for both sides of the market
         demand_X = self.Demand_X(t_initial) # type X's demand for type Y
@@ -86,11 +104,15 @@ class MatchingModel(Pytree, mutable=False):
         ) -> Solution:
         """ Solve equilibrium transfers of matching model and store equilibrium outcomes
         
-            - Inputs:
-                - acceleration (str): set accelerator of fixed-point iterations ("None" or "SQUAREM)
-                - step_tol (float): stopping tolerance for step length of fixed-point iterations, x_{i+1} - x_{i}
-                - root_tol (float): stopping tolerance for root size of fixed-point iterations, z_{i}
-                - max_iter (int): maximum number of iterations
+            Args:
+                acceleration (str): set accelerator of fixed-point iterations ("None" or "SQUAREM)
+                step_tol (float): stopping tolerance for step length of fixed-point iterations, x_{i+1} - x_{i}
+                root_tol (float): stopping tolerance for root size of fixed-point iterations, z_{i}
+                max_iter (int): maximum number of iterations
+
+            Returns:
+                solution (Solution):
+                    solution of the model (transfer, matches)
         """
         
         # Initial guess for transfer
