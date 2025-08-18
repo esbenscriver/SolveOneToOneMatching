@@ -28,7 +28,7 @@ If you use this script in your research, I ask that you also cite [Andersen (202
     }
 
 # Dependencies
-In order to run the scripts, you need to have installed [JAX](https://github.com/jax-ml/jax), [Simple Pytree](https://github.com/cgarciae/simple-pytree), and [fxp-jax](https://github.com/esbenscriver/fxp-jax). The latter is an implementation of a fixed-point iteration algorithm that allow the user to solve the system of fixed-point equations by standard fixed-point iterations and the SQUAREM accelerator, see [Du and Varadhan (2020)](https://www.jstatsoft.org/article/view/v092i07).
+In order to run the scripts, you need to have installed [JAX](https://github.com/jax-ml/jax), [Simple Pytree](https://github.com/cgarciae/simple-pytree), and [fxp-jax](https://github.com/esbenscriver/fxp-jax). The latter is an implementation of a fixed-point iteration algorithm that allow the user to solve the system of fixed-point equations by standard fixed-point iterations and the SQUAREM accelerator, see [Du and Varadhan (2020)](https://doi.org/10.18637/jss.v092.i07).
 
     
 

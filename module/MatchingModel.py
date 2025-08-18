@@ -131,5 +131,6 @@ class MatchingModel(Pytree, mutable=False):
             step_tol=step_tol,
             root_tol=root_tol,
             max_iter=max_iter,
-        ).solve(guess=transfer_init, accelerator=acceleration)
+            accelerator=acceleration,
+        ).solve(guess=transfer_init)
         return Solution(transfer=result.x, matches=self.Demand_X(result.x))

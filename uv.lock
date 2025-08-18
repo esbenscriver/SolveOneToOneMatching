@@ -18,15 +18,15 @@ wheels = [
 
 [[package]]
 name = "fxp-jax"
-version = "0.1.20"
+version = "0.2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jax" },
     { name = "simple-pytree" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6b/31/c4f60a356741440aec10a1a0f367825399ed927becd7ac063fab3c480b05/fxp_jax-0.1.20.tar.gz", hash = "sha256:6954e3573c0d039fce4a255d080e4b5baadc5cb6f0f29ea3b819bbc30b85b436", size = 4462, upload-time = "2025-08-13T19:54:07.181Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6d/60/5621c8c1c57f77d33ae973f8f9e3752d9858517f1d850cf6d31157b52d41/fxp_jax-0.2.2.tar.gz", hash = "sha256:a1bbc8b820ba5e02d6be100b64895c698e3d3c186f92e6bb589f9ac412593790", size = 29861, upload-time = "2025-08-18T20:32:22.702Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/ec/f3cf1f9bc30a17e4957c76ce9d4e834c7b80d61370f6dd479d72d79b8bfb/fxp_jax-0.1.20-py3-none-any.whl", hash = "sha256:6b55313bbeae28e5fffab0f80f16905b3d2cfb0250d52bbbf909f920d85f5e72", size = 4557, upload-time = "2025-08-13T19:54:05.87Z" },
+    { url = "https://files.pythonhosted.org/packages/39/dd/d6d3284c6b2a84c696b4c99ba306b5a89f5bd7bc7c3df81923ec6221906b/fxp_jax-0.2.2-py3-none-any.whl", hash = "sha256:309a9504f49477f3d38a3eab1502f18648955680701e1062ccc7c3272b27d981", size = 4317, upload-time = "2025-08-18T20:32:21.236Z" },
 ]
 
 [[package]]
@@ -343,7 +343,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fxp-jax", specifier = ">=0.1.20" },
+    { name = "fxp-jax", specifier = ">=0.2.2" },
     { name = "jax", specifier = ">=0.6.2" },
     { name = "simple-pytree", specifier = ">=0.2.2" },
 ]
