@@ -43,6 +43,7 @@ jobs:
       - name: Install dependencies and check formatting
         run: |
           uv venv
+          source .venv/bin/activate
           uv sync --locked
           pyright .
 
