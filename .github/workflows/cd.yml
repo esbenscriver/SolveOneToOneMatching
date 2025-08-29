@@ -15,6 +15,7 @@ env:
 jobs:
 
   details:
+    name: Extract Release Details
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.release.outputs.new_version }}
@@ -41,7 +42,8 @@ jobs:
             exit 1
           fi
 
-  setup_and_build:
+  build:
+    name: Build Project
     needs: [details,]
     runs-on: ubuntu-latest
     steps:
@@ -56,8 +58,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Set project version with uv
-        run: |
-          uv version ${{ needs.details.outputs.new_version }}
+        run: uv version ${{ needs.details.outputs.new_version }}
 
       - name: Install dependencies
         run: |
@@ -66,8 +67,7 @@ jobs:
           uv sync --locked
 
       - name: Build source and wheel distribution
-        run: |
-          uv build
+        run: uv build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -77,7 +77,7 @@ jobs:
 
   github_release:
     name: Create GitHub Release
-    needs: [setup_and_build, details]
+    needs: [build, details]
     runs-on: ubuntu-latest
     permissions:
       contents: write

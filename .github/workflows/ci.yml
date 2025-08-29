@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   test:
+    name: Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -26,6 +27,7 @@ jobs:
           PYTHONPATH=. pytest
           
   pyright:
+    name: Check Type Formatting
     runs-on: ubuntu-latest
 
     steps:
@@ -40,7 +42,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Install dependencies and check formatting
+      - name: Install dependencies and check type formatting
         run: |
           uv venv
           source .venv/bin/activate
@@ -48,6 +50,7 @@ jobs:
           pyright .
 
   lint:
+    name: Check Linting
     runs-on: ubuntu-latest
 
     steps:
