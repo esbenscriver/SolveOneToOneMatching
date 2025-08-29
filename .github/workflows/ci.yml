@@ -18,12 +18,34 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Install dependencies
+      - name: Install dependencies and run tests
         run: |
           uv venv
           source .venv/bin/activate
           uv sync --locked
-          PYTHONPATH=. pytest  
+          PYTHONPATH=. pytest
+          
+  pyright:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies and run pyright
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv sync --locked
+          pyright .
 
   lint:
     runs-on: ubuntu-latest
