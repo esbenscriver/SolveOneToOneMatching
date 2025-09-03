@@ -22,3 +22,12 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+
+[tool.pyright]
+pythonPath = "src"
+
+[tool.ruff]
+src = ["src"]

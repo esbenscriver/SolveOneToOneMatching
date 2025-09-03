@@ -24,7 +24,7 @@ jobs:
           uv venv
           source .venv/bin/activate
           uv sync --locked
-          PYTHONPATH=. pytest
+          pytest
           
   pyright:
     name: Check Type Formatting
