@@ -1,5 +1,5 @@
 """
-test module/DiscreteChoiceModel.py
+test SolveOneToOneMatching/DiscreteChoiceModel.py
 """
 
 # import JAX
@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from jax import random
 
 # import solver for one-to-one matching model
-from module.DiscreteChoiceModel import (
+from SolveOneToOneMatching.DiscreteChoiceModel import (
     LogitModel,
     NestedLogitModel,
     GeneralizedNestedLogitModel,
