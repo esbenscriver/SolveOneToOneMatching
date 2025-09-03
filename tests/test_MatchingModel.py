@@ -8,8 +8,8 @@ import jax.numpy as jnp
 from jax import random
 
 # import solver for one-to-one matching model
-from module.MatchingModel import MatchingModel, Solution
-from module.DiscreteChoiceModel import (
+from SolveOneToOneMatching.MatchingModel import MatchingModel, Solution
+from SolveOneToOneMatching.DiscreteChoiceModel import (
     LogitModel,
     NestedLogitModel,
     GeneralizedNestedLogitModel,
