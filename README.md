@@ -8,7 +8,7 @@
 # Description
 This script implements a fixed-point iteration algorithm in JAX to solve a class of one-to-one matching models with linear transfers.
 
-The main script, MatchingModel.py, sets up and solves a general system of fixed-point equations for the set of equilibrium transfers in a one-to-one matching model for a given specification of discrete choice models. The Script DiscreteChoiceModel.py contains three discrete choice models. Finally, the script main.py sets up and solves three special cases of one-to-one matching models with transferable utility, where the discrete choices of agents on both sides of the matching market are described by:
+The main script, MatchingModel.py, sets up and solves a general system of fixed-point equations for the set of equilibrium transfers in a one-to-one matching model for a given specification of discrete choice models. The Script DiscreteChoiceModel.py contains three discrete choice models. Finally, the script examples/main.py sets up and solves three special cases of one-to-one matching models with transferable utility, where the discrete choices of agents on both sides of the matching market are described by:
  - Logit model
  - Nested logit model
  - Generalized nested logit model
