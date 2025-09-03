@@ -13,7 +13,7 @@ from simple_pytree import Pytree, dataclass
 # import fixed-point iterator
 from fxp_jax import fxp_root
 
-from module.DiscreteChoiceModel import ModelType
+from SolveOneToOneMatching.DiscreteChoiceModel import ModelType
 
 
 @dataclass

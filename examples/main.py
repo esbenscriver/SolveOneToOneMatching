@@ -15,8 +15,8 @@ import jax.numpy as jnp
 from jax import random
 
 # import solver for one-to-one matching model
-from module.MatchingModel import MatchingModel
-from module.DiscreteChoiceModel import (
+from SolveOneToOneMatching.MatchingModel import MatchingModel
+from SolveOneToOneMatching.DiscreteChoiceModel import (
     LogitModel,
     NestedLogitModel,
     GeneralizedNestedLogitModel,
@@ -27,7 +27,7 @@ jax.config.update("jax_enable_x64", True)
 
 # choose accelerator of fixed-point iterations
 acceleration = "None"
-# acceleration = "SQUAREM"
+acceleration = "SQUAREM"
 
 # Set number of types of agents on both sides of the market
 types_X, types_Y = 4, 6

@@ -1,6 +1,6 @@
 [project]
 name = "SolveOneToOneMatching"
-version = "0.1.45"
+version = "0.1.46"
 description = "JAX implementation of fixed-point iteration algoritm to solve one-to-one matching model with transferable utility"
 authors = [
     { name="Esben Scriver Andersen", email="esbenscriver@gmail.com" }
@@ -19,3 +19,6 @@ dev = [
     "pytest>=8.4.1",
     "ruff>=0.12.8",
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
