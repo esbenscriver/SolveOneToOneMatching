@@ -27,6 +27,7 @@ jax.config.update("jax_enable_x64", True)
 
 # choose accelerator of fixed-point iterations
 acceleration = "None"
+acceleration = "Anderson"
 acceleration = "SQUAREM"
 
 # Set number of types of agents on both sides of the market

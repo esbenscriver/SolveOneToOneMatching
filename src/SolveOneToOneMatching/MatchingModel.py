@@ -10,8 +10,9 @@ import jax.numpy as jnp
 # import simple_pytree (used to store variables)
 from simple_pytree import Pytree, dataclass
 
-# import fixed-point iterator
-from fxp_jax import fxp_root
+# import solvers
+from jaxopt import FixedPointIteration, AndersonAcceleration
+from squarem_jaxopt import SquaremAcceleration
 
 from SolveOneToOneMatching.DiscreteChoiceModel import ModelType
 
@@ -113,7 +114,6 @@ class MatchingModel(Pytree, mutable=False):
         self,
         acceleration: str = "None",
         step_tol: float = 1e-10,
-        root_tol: float = 1e-8,
         max_iter: int = 100_000,
     ) -> Solution:
         """Solve equilibrium transfers of matching model and store equilibrium outcomes
@@ -121,7 +121,6 @@ class MatchingModel(Pytree, mutable=False):
         Args:
             acceleration (str): set accelerator of fixed-point iterations ("None" or "SQUAREM)
             step_tol (float): stopping tolerance for step length of fixed-point iterations, x_{i+1} - x_{i}
-            root_tol (float): stopping tolerance for root size of fixed-point iterations, z_{i}
             max_iter (int): maximum number of iterations
 
         Returns:
@@ -132,15 +131,25 @@ class MatchingModel(Pytree, mutable=False):
         # Initial guess for transfer
         transfer_init = jnp.zeros((self.numberOfTypes_X, self.numberOfTypes_Y))
 
-        def fixed_point(t: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
-            return self.UpdateTransfers(t, self.adjust_step)
+        def fixed_point(t: jnp.ndarray) -> jnp.ndarray:
+            return self.UpdateTransfers(t, self.adjust_step)[0]
 
-        # Find equilibrium transfer by fixed-point iterations
-        result = fxp_root(
+        if acceleration == "SQUAREM":
+            fxp = SquaremAcceleration
+        elif acceleration == "Anderson":
+            fxp = AndersonAcceleration
+        elif acceleration == "None":
+            fxp = FixedPointIteration
+        else:
+            raise ValueError(f"Unknown acceleration method: {acceleration}")
+
+        result = fxp(
             fixed_point,
-            step_tol=step_tol,
-            root_tol=root_tol,
-            max_iter=max_iter,
-            accelerator=acceleration,
-        ).solve(guess=transfer_init)
-        return Solution(transfer=result.x, matches=self.Demand_X(result.x))
+            maxiter=max_iter,
+            tol=step_tol,
+        ).run(transfer_init)
+
+        print(
+            f"Accelerator: {acceleration}, iterations={result.state.iter_num}, function evaluations={result.state.num_fun_eval}, error={result.state.error}."
+        )
+        return Solution(transfer=result.params, matches=self.Demand_X(result.params))
