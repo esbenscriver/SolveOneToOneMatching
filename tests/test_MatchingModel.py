@@ -1,5 +1,5 @@
 """
-test module/MatchingModel.py
+test SolveOneToOneMatching/MatchingModel.py
 """
 
 # import JAX
