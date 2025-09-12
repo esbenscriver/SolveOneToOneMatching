@@ -175,7 +175,7 @@ class NestedLogitModel(Pytree, mutable=False):
 
         P_outside = expV_outside / denominator_nest
         return P_cond * P_nest, P_outside
-    
+
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
         """Compute demand for inside options
 
