@@ -16,7 +16,7 @@ from squarem_jaxopt import SquaremAcceleration
 
 from SolveOneToOneMatching.DiscreteChoiceModel import ModelType
 
-
+SolverTypes = type[SquaremAcceleration] | type[AndersonAcceleration] | type[FixedPointIteration] 
 @dataclass
 class Solution(Pytree, mutable=False):
     """Solution of matching model
@@ -112,14 +112,15 @@ class MatchingModel(Pytree, mutable=False):
 
     def Solve(
         self,
-        acceleration: str = "None",
-        step_tol: float = 1e-10,
-        max_iter: int = 100_000,
+        fixed_point_solver: SolverTypes = FixedPointIteration,
+        tol: float = 1e-10,
+        maxiter: int = 1_000,
+        verbose: bool = True,
     ) -> Solution:
         """Solve equilibrium transfers of matching model and store equilibrium outcomes
 
         Args:
-            acceleration (str): set accelerator of fixed-point iterations ("None" or "SQUAREM)
+            fixed_point_solver (SolverTypes): solver used for solving fixed point equation (FixedPointIteration, AndersonAcceleration, SquaremAcceleration)
             step_tol (float): stopping tolerance for step length of fixed-point iterations, x_{i+1} - x_{i}
             max_iter (int): maximum number of iterations
 
@@ -131,25 +132,13 @@ class MatchingModel(Pytree, mutable=False):
         # Initial guess for transfer
         transfer_init = jnp.zeros((self.numberOfTypes_X, self.numberOfTypes_Y))
 
-        def fixed_point(t: jnp.ndarray) -> jnp.ndarray:
+        def fixed_point_fun(t: jnp.ndarray) -> jnp.ndarray:
             return self.UpdateTransfers(t, self.adjust_step)[0]
 
-        if acceleration == "SQUAREM":
-            fxp = SquaremAcceleration
-        elif acceleration == "Anderson":
-            fxp = AndersonAcceleration
-        elif acceleration == "None":
-            fxp = FixedPointIteration
-        else:
-            raise ValueError(f"Unknown acceleration method: {acceleration}")
-
-        result = fxp(
-            fixed_point,
-            maxiter=max_iter,
-            tol=step_tol,
+        result = fixed_point_solver(
+            fixed_point_fun,
+            maxiter=maxiter,
+            tol=tol,
+            verbose=verbose,
         ).run(transfer_init)
-
-        print(
-            f"Accelerator: {acceleration}, iterations={result.state.iter_num}, function evaluations={result.state.num_fun_eval}, error={result.state.error}."
-        )
         return Solution(transfer=result.params, matches=self.Demand_X(result.params))
