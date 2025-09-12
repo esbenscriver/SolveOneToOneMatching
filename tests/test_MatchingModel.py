@@ -24,6 +24,7 @@ import pytest
 # Increase precision to 64 bit
 jax.config.update("jax_enable_x64", True)
 
+
 @pytest.mark.parametrize(
     "types_X, types_Y, model_name_X, model_name_Y, fixed_point_solver",
     [
@@ -39,24 +40,26 @@ jax.config.update("jax_enable_x64", True)
         (100, 200, "NestedLogit", "GeneralizedNestedLogit", SquaremAcceleration),
         (100, 200, "GeneralizedNestedLogit", "Logit", SquaremAcceleration),
         (100, 200, "GeneralizedNestedLogit", "NestedLogit", SquaremAcceleration),
-        (100, 200, "GeneralizedNestedLogit", "GeneralizedNestedLogit", SquaremAcceleration),
+        (
+            100,
+            200,
+            "GeneralizedNestedLogit",
+            "GeneralizedNestedLogit",
+            SquaremAcceleration,
+        ),
     ],
 )
 def test_solve(
-    types_X: int, 
-    types_Y: int, 
-    model_name_X: Literal["Logit","NestedLogit","GeneralizedNestedLogit"], 
-    model_name_Y: Literal["Logit","NestedLogit","GeneralizedNestedLogit"], 
+    types_X: int,
+    types_Y: int,
+    model_name_X: Literal["Logit", "NestedLogit", "GeneralizedNestedLogit"],
+    model_name_Y: Literal["Logit", "NestedLogit", "GeneralizedNestedLogit"],
     fixed_point_solver: SolverTypes,
-    ) -> None:
+) -> None:
     nests_X, nests_Y = 2, 3
 
-    utility_X = -random.uniform(
-        key=random.PRNGKey(111), shape=(types_X, types_Y)
-    )
-    utility_Y = random.uniform(
-        key=random.PRNGKey(211), shape=(types_Y, types_X)
-    )
+    utility_X = -random.uniform(key=random.PRNGKey(111), shape=(types_X, types_Y))
+    utility_Y = random.uniform(key=random.PRNGKey(211), shape=(types_Y, types_X))
 
     scale_X = random.uniform(key=random.PRNGKey(112), shape=(types_X, 1)) + 1.0
     scale_Y = random.uniform(key=random.PRNGKey(212), shape=(types_Y, 1)) + 1.0
@@ -82,7 +85,7 @@ def test_solve(
     )
     nest_share_X = random.dirichlet(
         key=random.PRNGKey(215), alpha=jnp.ones((nests_Y,)), shape=(types_Y,)
-)
+    )
 
     if model_name_X == "Logit":
         model_X = LogitModel(utility=utility_X, scale=scale_X, n=n_X)
@@ -94,8 +97,8 @@ def test_solve(
             nest_parameter=nest_parameter_X,
             n=n_X,
         )
-    elif model_name_X ==  "GeneralizedNestedLogit":
-        model_X=GeneralizedNestedLogitModel(
+    elif model_name_X == "GeneralizedNestedLogit":
+        model_X = GeneralizedNestedLogitModel(
             utility=utility_X,
             scale=scale_X,
             nest_share=nest_share_X,
