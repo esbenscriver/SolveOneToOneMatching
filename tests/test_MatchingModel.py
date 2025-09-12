@@ -7,6 +7,9 @@ import jax
 import jax.numpy as jnp
 from jax import random
 
+from jaxopt import FixedPointIteration, AndersonAcceleration
+from squarem_jaxopt import SquaremAcceleration
+
 # import solver for one-to-one matching model
 from SolveOneToOneMatching.MatchingModel import MatchingModel, Solution
 from SolveOneToOneMatching.DiscreteChoiceModel import (
@@ -68,11 +71,15 @@ def test_solve() -> None:
                 key=random.PRNGKey(215), alpha=jnp.ones((nests_Y,)), shape=(types_Y,)
             )
 
-            for acceleration in ["None", "SQUAREM"]:
+            for fixed_point_solver in [
+                FixedPointIteration,
+                AndersonAcceleration,
+                SquaremAcceleration,
+            ]:
                 print(
                     "-----------------------------------------------------------------------"
                 )
-                print(f"{types_X = }, {types_Y = }, {acceleration = }:")
+                print(f"{types_X = }, {types_Y = }, {fixed_point_solver = }:")
                 print(
                     "-----------------------------------------------------------------------"
                 )
@@ -83,10 +90,10 @@ def test_solve() -> None:
                     model_Y=LogitModel(utility=utility_Y, scale=scale_Y, n=n_Y),
                 )
 
-                solution_logit = model_logit.Solve(acceleration=acceleration)
-                scenario_logit = (
-                    f"Logit model: {types_X = }, {types_Y = }, {acceleration = }"
+                solution_logit = model_logit.Solve(
+                    fixed_point_solver=fixed_point_solver
                 )
+                scenario_logit = f"Logit model: {types_X = }, {types_Y = }"
                 assert_excess_demand(model_logit, solution_logit, scenario_logit)
 
                 print(
@@ -112,10 +119,10 @@ def test_solve() -> None:
                 )
 
                 solution_nested_logit = model_nested_logit.Solve(
-                    acceleration=acceleration
+                    fixed_point_solver=fixed_point_solver
                 )
                 scenario_nested_logit = (
-                    f"Nested logit model: {types_X = }, {types_Y = }, {acceleration = }"
+                    f"Nested logit model: {types_X = }, {types_Y = }"
                 )
                 assert_excess_demand(
                     model_nested_logit, solution_nested_logit, scenario_nested_logit
@@ -143,8 +150,6 @@ def test_solve() -> None:
                     ),
                 )
 
-                solution_GNL = model_GNL.Solve(acceleration=acceleration)
-                scenario_GNL = (
-                    f"GNL model: {types_X = }, {types_Y = }, {acceleration = }"
-                )
+                solution_GNL = model_GNL.Solve(fixed_point_solver=fixed_point_solver)
+                scenario_GNL = f"GNL model: {types_X = }, {types_Y = }"
                 assert_excess_demand(model_GNL, solution_GNL, scenario_GNL)

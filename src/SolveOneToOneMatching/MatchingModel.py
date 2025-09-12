@@ -16,7 +16,11 @@ from squarem_jaxopt import SquaremAcceleration
 
 from SolveOneToOneMatching.DiscreteChoiceModel import ModelType
 
-SolverTypes = type[SquaremAcceleration] | type[AndersonAcceleration] | type[FixedPointIteration] 
+SolverTypes = (
+    type[SquaremAcceleration] | type[AndersonAcceleration] | type[FixedPointIteration]
+)
+
+
 @dataclass
 class Solution(Pytree, mutable=False):
     """Solution of matching model
