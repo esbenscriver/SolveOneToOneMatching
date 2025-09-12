@@ -47,14 +47,6 @@ class MatchingModel(Pytree, mutable=False):
     model_Y: ModelType
 
     @property
-    def numberOfTypes_X(self) -> int:
-        return self.model_X.n.size
-
-    @property
-    def numberOfTypes_Y(self) -> int:
-        return self.model_Y.n.size
-
-    @property
     def adjust_step(self) -> jnp.ndarray:
         scale_adjustment_X = self.model_X.scale * self.model_X.adjustment
         scale_adjustment_Y = self.model_Y.scale * self.model_Y.adjustment
@@ -127,10 +119,10 @@ class MatchingModel(Pytree, mutable=False):
             solution (Solution):
                 solution of the model (transfer, matches)
         """
+        # Initial guess for equilibrium transfers
+        transfer_init = jnp.zeros((self.model_X.n.size, self.model_Y.n.size))
 
-        # Initial guess for transfer
-        transfer_init = jnp.zeros((self.numberOfTypes_X, self.numberOfTypes_Y))
-
+        # Find equilibrium transfers
         result = fixed_point_solver(
             self.UpdateTransfers,
             maxiter=maxiter,
