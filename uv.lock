@@ -349,7 +349,7 @@ wheels = [
 
 [[package]]
 name = "solveonetoonematching"
-version = "0.1.47"
+version = "1.0.1"
 source = { virtual = "." }
 dependencies = [
     { name = "fxp-jax" },
