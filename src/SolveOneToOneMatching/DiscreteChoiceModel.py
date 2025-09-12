@@ -175,66 +175,7 @@ class NestedLogitModel(Pytree, mutable=False):
 
         P_outside = expV_outside / denominator_nest
         return P_cond * P_nest, P_outside
-
-    def ChoiceProbabilities_new(
-        self, v: jnp.ndarray
-    ) -> tuple[jnp.ndarray, jnp.ndarray]:
-        """Compute the nested logit choice probabilities for inside and outside options
-
-        Args:
-            v (jnp.ndarray): choice-specific payoffs
-
-        Returns:
-        P_inside (jnp.ndarray):
-            choice probabilities of inside options.
-        P_outside (jnp.ndarray):
-            choice probabilities of outside option.
-        """
-        from jax.ops import segment_max
-
-        # Explanation einsum indexes:
-        # - n: index for agents' types
-        # - j: index for alternatives (inside options)
-        # - k: index for nests of alternatives (outside option is assumed to belong to its own nest)
-
-        nest_parameter = jnp.einsum(
-            "nk, jk -> nj", self.nest_parameter, self.nest_structure
-        )
-
-        v_nest_parameter = v / nest_parameter
-
-        # Step 4: subtract max per nest from each row
-        centering_cond = segment_max(
-            v_nest_parameter.T, self.nest_index, num_segments=self.number_of_nests
-        )[self.nest_index, :].T
-
-        # exponentiated centered payoffs of inside options
-        expV_cond = jnp.exp(v_nest_parameter - centering_cond)
-
-        denominator_cond = jnp.einsum("nj, jk -> nk", expV_cond, self.nest_structure)
-        P_cond = expV_cond / jnp.einsum(
-            "nk, jk -> nj", denominator_cond, self.nest_structure
-        )
-
-        centering_nest = jnp.max(v_nest_parameter, axis=self.axis, keepdims=True)
-        expV_inside = jnp.exp(v_nest_parameter - centering_nest)
-        expV_outside = jnp.where(self.outside_option, jnp.exp(-centering_nest), 0.0)
-
-        nominator_nest = (
-            jnp.einsum("nj, jk -> nk", expV_inside, self.nest_structure)
-            ** self.nest_parameter
-        )
-        denominator_nest = expV_outside + jnp.sum(
-            nominator_nest, axis=self.axis, keepdims=True
-        )
-        P_nest = (
-            jnp.einsum("nk, jk -> nj", nominator_nest, self.nest_structure)
-            / denominator_nest
-        )
-
-        P_outside = expV_outside / denominator_nest
-        return P_cond * P_nest, P_outside
-
+    
     def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
         """Compute demand for inside options
 
