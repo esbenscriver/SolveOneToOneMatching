@@ -1,9 +1,14 @@
 """
 Solve three examples of one-to-one matching model with linear transfers, where the discrete choices of the agents
 on both sides of the matching market are described by:
- - Logit model
- - Nested logit model
- - Generalized nested logit model
+    - Logit model
+    - Nested logit model
+    - Generalized nested logit model
+
+The models can be solved by
+    - FixedPointIteration
+    - AndersonAcceleration
+    - SquaremAcceleration
 
 Reference:
 Esben Scriver Andersen, Note on solving one-to-one matching models with linear transferable utility, 2025 (https://arxiv.org/pdf/2409.05518)
