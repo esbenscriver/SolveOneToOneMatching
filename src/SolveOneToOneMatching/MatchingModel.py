@@ -62,7 +62,6 @@ class MatchingModel(Pytree, mutable=False):
 
         Returns:
             demand (jnp.ndarray): match-specific demand
-
         """
         v_X = (self.model_X.utility + transfer) / self.model_X.scale
         return self.model_X.Demand(v_X)
@@ -75,7 +74,6 @@ class MatchingModel(Pytree, mutable=False):
 
         Returns:
             demand (jnp.ndarray): match-specific demand
-
         """
         v_Y = (self.model_Y.utility - transfer.T) / self.model_Y.scale
         return self.model_Y.Demand(v_Y).T
@@ -90,8 +88,7 @@ class MatchingModel(Pytree, mutable=False):
             adjust_step (jnp.ndarray): adjustment terms for step lenght
 
         Returns:
-        t_updated (jnp.ndarray):
-            updated transfer.
+            t_updated (jnp.ndarray): updated transfers
         """
         # Calculate demand for both sides of the market
         demand_X = self.Demand_X(t_initial)  # type X's demand for type Y
@@ -116,8 +113,7 @@ class MatchingModel(Pytree, mutable=False):
             max_iter (int): maximum number of iterations
 
         Returns:
-            solution (Solution):
-                solution of the model (transfer, matches)
+            solution (Solution): solution of the model (transfer, matches)
         """
         # Initial guess for equilibrium transfers
         transfer_init = jnp.zeros((self.model_X.n.size, self.model_Y.n.size))
