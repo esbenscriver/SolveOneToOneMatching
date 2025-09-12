@@ -90,7 +90,7 @@ class MatchingModel(Pytree, mutable=False):
 
     def UpdateTransfers(
         self, t_initial: jnp.ndarray, adjust_step: jnp.ndarray
-    ) -> tuple[jnp.ndarray, jnp.ndarray]:
+    ) -> jnp.ndarray:
         """Computes excess demand and updates fixed point equation for transfers
 
         Args:
@@ -100,19 +100,14 @@ class MatchingModel(Pytree, mutable=False):
         Returns:
         t_updated (jnp.ndarray):
             updated transfer.
-        logratio (jnp.ndarray):
-            log-ratio of excess demand.
         """
         # Calculate demand for both sides of the market
         demand_X = self.Demand_X(t_initial)  # type X's demand for type Y
         demand_Y = self.Demand_Y(t_initial)  # type Y's demand for type X
 
-        # Calculate the log-ratio of excess demand for type X
-        logratio = jnp.log(demand_Y / demand_X)
-
         # Update transfer
-        t_updated = t_initial + adjust_step * logratio
-        return t_updated, logratio
+        t_updated = t_initial + adjust_step * jnp.log(demand_Y / demand_X)
+        return t_updated
 
     def Solve(
         self,
@@ -136,13 +131,10 @@ class MatchingModel(Pytree, mutable=False):
         # Initial guess for transfer
         transfer_init = jnp.zeros((self.numberOfTypes_X, self.numberOfTypes_Y))
 
-        def fixed_point_fun(t: jnp.ndarray) -> jnp.ndarray:
-            return self.UpdateTransfers(t, self.adjust_step)[0]
-
         result = fixed_point_solver(
-            fixed_point_fun,
+            self.UpdateTransfers,
             maxiter=maxiter,
             tol=tol,
             verbose=verbose,
-        ).run(transfer_init)
+        ).run(transfer_init, self.adjust_step)
         return Solution(transfer=result.params, matches=self.Demand_X(result.params))
