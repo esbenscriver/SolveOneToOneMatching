@@ -61,30 +61,6 @@ class LogitModel(Pytree, mutable=False):
         denominator = expV_outside + jnp.sum(expV_inside, axis=self.axis, keepdims=True)
         return expV_inside / denominator, expV_outside / denominator
 
-    def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for inside options
-
-        Args:
-            v (jnp.ndarray): choice-specific payoffs
-
-        Returns:
-            demand (jnp.ndarray): choice-specific demand
-
-        """
-        return self.n * self.ChoiceProbabilities(v)[0]
-
-    def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for outside option
-
-        Args:
-            v (jnp.ndarray): choice-specific payoffs
-
-        Returns:
-            demand (jnp.ndarray): demand for outside option
-
-        """
-        return self.n * self.ChoiceProbabilities(v)[1]
-
 
 @dataclass
 class NestedLogitModel(Pytree, mutable=False):
@@ -176,30 +152,6 @@ class NestedLogitModel(Pytree, mutable=False):
         P_outside = expV_outside / denominator_nest
         return P_cond * P_nest, P_outside
 
-    def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for inside options
-
-        Args:
-            v (jnp.ndarray): choice-specific payoffs
-
-        Returns:
-            demand (jnp.ndarray): choice-specific demand
-
-        """
-        return self.n * self.ChoiceProbabilities(v)[0]
-
-    def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for outside option
-
-        Args:
-            v (jnp.ndarray): choice-specific payoffs
-
-        Returns:
-            demand (jnp.ndarray): demand for outside option
-
-        """
-        return self.n * self.ChoiceProbabilities(v)[1]
-
 
 @dataclass
 class GeneralizedNestedLogitModel(Pytree, mutable=False):
@@ -276,30 +228,6 @@ class GeneralizedNestedLogitModel(Pytree, mutable=False):
         P_outside = expV_outside / denominator_nk[:, None]
 
         return P_inside, P_outside
-
-    def Demand(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for inside options
-
-        Args:
-            v (jnp.ndarray): choice-specific payoffs
-
-        Returns:
-            demand (jnp.ndarray): choice-specific demand
-
-        """
-        return self.n * self.ChoiceProbabilities(v)[0]
-
-    def Demand_outside_option(self, v: jnp.ndarray) -> jnp.ndarray:
-        """Compute demand for outside option
-
-        Args:
-            v (jnp.ndarray): choice-specific payoffs
-
-        Returns:
-            demand (jnp.ndarray): demand for outside option
-
-        """
-        return self.n * self.ChoiceProbabilities(v)[1]
-
-
+    
+    
 ModelType = LogitModel | NestedLogitModel | GeneralizedNestedLogitModel
