@@ -228,6 +228,6 @@ class GeneralizedNestedLogitModel(Pytree, mutable=False):
         P_outside = expV_outside / denominator_nk[:, None]
 
         return P_inside, P_outside
-    
-    
+
+
 ModelType = LogitModel | NestedLogitModel | GeneralizedNestedLogitModel

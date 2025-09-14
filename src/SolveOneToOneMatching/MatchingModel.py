@@ -53,26 +53,26 @@ class MatchingModel(Pytree, mutable=False):
         return (scale_adjustment_X * scale_adjustment_Y.T) / (
             scale_adjustment_X + scale_adjustment_Y.T
         )
-    
+
     def Payoff_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
         """Computes agents of type X's payoffs
-        
+
         Args:
             transfer (jnp.ndarray): match-specific transfers
-             
+
         returns:
-            v_X (jnp.ndarray): match-specific payoffs 
+            v_X (jnp.ndarray): match-specific payoffs
         """
         return (self.model_X.utility + transfer) / self.model_X.scale
-    
+
     def Payoff_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
         """Computes agents of type Y's payoffs
-        
+
         Args:
             transfer (jnp.ndarray): match-specific transfers
-             
+
         returns:
-            v_Y (jnp.ndarray): match-specific payoffs 
+            v_Y (jnp.ndarray): match-specific payoffs
         """
         return (self.model_Y.utility - transfer.T) / self.model_Y.scale
 
@@ -87,7 +87,7 @@ class MatchingModel(Pytree, mutable=False):
         """
         v_X = self.Payoff_X(transfer)
         return self.model_X.n * self.model_X.ChoiceProbabilities(v_X)[0]
-    
+
     def Demand_outside_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
         """Computes agents of type X's demand for outside option
 
@@ -111,7 +111,7 @@ class MatchingModel(Pytree, mutable=False):
         """
         v_Y = self.Payoff_Y(transfer)
         return (self.model_Y.n * self.model_Y.ChoiceProbabilities(v_Y)[0]).T
-    
+
     def Demand_outside_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
         """Computes agents of type Y's demand for outside option
 
