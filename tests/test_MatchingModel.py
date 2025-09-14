@@ -130,6 +130,26 @@ def test_solve(
 
     demand_X = matching_model.Demand_X(solution.transfer)
     demand_Y = matching_model.Demand_Y(solution.transfer)
+
     assert jnp.allclose(demand_X, demand_Y), (
         f"{jnp.linalg.norm(demand_X - demand_Y) = }"
     )
+
+    if model_X.outside_option is True:
+        demand_outside = matching_model.Demand_outside_X(model_X.utility)
+        demand_inside = jnp.sum(
+            matching_model.Demand_X(model_X.utility), axis=model_X.axis, keepdims=True
+        )
+        check_demand_sum = demand_inside + demand_outside - model_X.n
+
+        assert jnp.allclose(check_demand_sum, 0.0), (
+            f"{jnp.min(check_demand_sum) = }, {jnp.max(check_demand_sum) = }"
+        )
+    else:
+        demand_inside = jnp.sum(
+            matching_model.Demand_X(model_X.utility), axis=model_X.axis, keepdims=True
+        )
+
+        assert jnp.allclose(demand_inside, model_X.n), (
+            f"{jnp.min(demand_inside) = }, {jnp.max(demand_inside) = }"
+        )
