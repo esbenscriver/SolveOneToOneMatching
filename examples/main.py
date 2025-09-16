@@ -71,7 +71,11 @@ nest_share_Y = random.dirichlet(
     key=random.PRNGKey(312), alpha=jnp.ones((nests_X,)), shape=(types_X,)
 )
 
-for fixed_point_solver in [FixedPointIteration, AndersonAcceleration, SquaremAcceleration]:
+for fixed_point_solver in [
+    FixedPointIteration,
+    AndersonAcceleration,
+    SquaremAcceleration,
+]:
     print("-----------------------------------------------------------------------")
     print("1. Solve a matching model with logit demand:")
 
@@ -102,7 +106,9 @@ for fixed_point_solver in [FixedPointIteration, AndersonAcceleration, SquaremAcc
         ),
     )
 
-    solution_nested_logit = model_nested_logit.Solve(fixed_point_solver=fixed_point_solver)
+    solution_nested_logit = model_nested_logit.Solve(
+        fixed_point_solver=fixed_point_solver
+    )
 
     print("-----------------------------------------------------------------------")
     print("3. Solve a matching model with generalized nested logit demand:")
