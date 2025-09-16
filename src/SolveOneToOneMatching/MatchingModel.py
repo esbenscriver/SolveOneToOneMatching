@@ -127,7 +127,7 @@ class MatchingModel(Pytree, mutable=False):
     def UpdateTransfers(
         self, t_initial: jnp.ndarray, adjust_step: jnp.ndarray
     ) -> jnp.ndarray:
-        """Computes excess demand and updates fixed point equation for transfers
+        """Updates fixed point equation for transfers
 
         Args:
             t_initial (jnp.ndarray): initial transfers
@@ -146,17 +146,18 @@ class MatchingModel(Pytree, mutable=False):
 
     def Solve(
         self,
-        fixed_point_solver: SolverTypes = FixedPointIteration,
+        fixed_point_solver: SolverTypes = SquaremAcceleration,
         tol: float = 1e-10,
         maxiter: int = 1_000,
         verbose: bool = True,
     ) -> Solution:
-        """Solve equilibrium transfers of matching model and store equilibrium outcomes
+        """Solve equilibrium and store solution
 
         Args:
             fixed_point_solver (SolverTypes): solver used for solving fixed point equation (FixedPointIteration, AndersonAcceleration, SquaremAcceleration)
-            step_tol (float): stopping tolerance for step length of fixed-point iterations, x_{i+1} - x_{i}
-            max_iter (int): maximum number of iterations
+            tol (float): stopping tolerance for step length of fixed-point iterations, x_{i+1} - x_{i}
+            maxiter (int): maximum number of iterations
+            verbose (bool): whether to print information on every iteration or not.
 
         Returns:
             solution (Solution): solution of the model (transfer, matches)
