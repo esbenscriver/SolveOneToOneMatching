@@ -6,6 +6,7 @@ Esben Scriver Andersen, Note on solving one-to-one matching models with linear t
 """
 
 import jax.numpy as jnp
+from jax import Array
 
 # import simple_pytree (used to store variables)
 from simple_pytree import Pytree, dataclass
@@ -26,12 +27,12 @@ class Solution(Pytree, mutable=False):
     """Solution of matching model
 
     Attributes:
-        transfer (jnp.ndarray): equilibrium transfer
-        matches (jnp.ndarray): equilibrium number of matches
+        transfer (Array): equilibrium transfer
+        matches (Array): equilibrium number of matches
     """
 
-    transfer: jnp.ndarray
-    matches: jnp.ndarray
+    transfer: Array
+    matches: Array
 
 
 @dataclass
@@ -47,94 +48,92 @@ class MatchingModel(Pytree, mutable=False):
     model_Y: ModelType
 
     @property
-    def adjust_step(self) -> jnp.ndarray:
+    def adjust_step(self) -> Array:
         scale_adjustment_X = self.model_X.scale * self.model_X.adjustment
         scale_adjustment_Y = self.model_Y.scale * self.model_Y.adjustment
         return (scale_adjustment_X * scale_adjustment_Y.T) / (
             scale_adjustment_X + scale_adjustment_Y.T
         )
 
-    def Payoff_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
+    def Payoff_X(self, transfer: Array) -> Array:
         """Computes agents of type X's payoffs
 
         Args:
-            transfer (jnp.ndarray): match-specific transfers
+            transfer (Array): match-specific transfers
 
         returns:
-            v_X (jnp.ndarray): match-specific payoffs
+            v_X (Array): match-specific payoffs
         """
         return (self.model_X.utility + transfer) / self.model_X.scale
 
-    def Payoff_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
+    def Payoff_Y(self, transfer: Array) -> Array:
         """Computes agents of type Y's payoffs
 
         Args:
-            transfer (jnp.ndarray): match-specific transfers
+            transfer (Array): match-specific transfers
 
         returns:
-            v_Y (jnp.ndarray): match-specific payoffs
+            v_Y (Array): match-specific payoffs
         """
         return (self.model_Y.utility - transfer.T) / self.model_Y.scale
 
-    def Demand_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
+    def Demand_X(self, transfer: Array) -> Array:
         """Computes agents of type X's demand for agents of type Y
 
         Args:
-            transfer (jnp.ndarray): match-specific transfers
+            transfer (Array): match-specific transfers
 
         Returns:
-            demand (jnp.ndarray): demand for inside options
+            demand (Array): demand for inside options
         """
         v_X = self.Payoff_X(transfer)
         return self.model_X.n * self.model_X.ChoiceProbabilities(v_X)[0]
 
-    def Demand_outside_X(self, transfer: jnp.ndarray) -> jnp.ndarray:
+    def Demand_outside_X(self, transfer: Array) -> Array:
         """Computes agents of type X's demand for outside option
 
         Args:
-            transfer (jnp.ndarray): match-specific transfers
+            transfer (Array): match-specific transfers
 
         Returns:
-            demand (jnp.ndarray): demand for outside option
+            demand (Array): demand for outside option
         """
         v_X = self.Payoff_X(transfer)
         return self.model_X.n * self.model_X.ChoiceProbabilities(v_X)[1]
 
-    def Demand_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
+    def Demand_Y(self, transfer: Array) -> Array:
         """Computes agents of type Y's demand for agents of type X
 
         Args:
-            transfer (jnp.ndarray): match-specific transfers
+            transfer (Array): match-specific transfers
 
         Returns:
-            demand (jnp.ndarray): demand for inside options
+            demand (Array): demand for inside options
         """
         v_Y = self.Payoff_Y(transfer)
         return (self.model_Y.n * self.model_Y.ChoiceProbabilities(v_Y)[0]).T
 
-    def Demand_outside_Y(self, transfer: jnp.ndarray) -> jnp.ndarray:
+    def Demand_outside_Y(self, transfer: Array) -> Array:
         """Computes agents of type Y's demand for outside option
 
         Args:
-            transfer (jnp.ndarray): match-specific transfers
+            transfer (Array): match-specific transfers
 
         Returns:
-            demand (jnp.ndarray): demand for outside option
+            demand (Array): demand for outside option
         """
         v_Y = (self.model_Y.utility - transfer.T) / self.model_Y.scale
         return (self.model_Y.n * self.model_Y.ChoiceProbabilities(v_Y)[1]).T
 
-    def UpdateTransfers(
-        self, t_initial: jnp.ndarray, adjust_step: jnp.ndarray
-    ) -> jnp.ndarray:
+    def UpdateTransfers(self, t_initial: Array, adjust_step: Array) -> Array:
         """Updates fixed point equation for transfers
 
         Args:
-            t_initial (jnp.ndarray): initial transfers
-            adjust_step (jnp.ndarray): adjustment terms for step lenght
+            t_initial (Array): initial transfers
+            adjust_step (Array): adjustment terms for step lenght
 
         Returns:
-            t_updated (jnp.ndarray): updated transfers
+            t_updated (Array): updated transfers
         """
         # Calculate demand for both sides of the market
         demand_X = self.Demand_X(t_initial)  # type X's demand for type Y

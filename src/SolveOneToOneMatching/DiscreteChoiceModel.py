@@ -6,6 +6,7 @@ Esben Scriver Andersen, Note on solving one-to-one matching models with linear t
 """
 
 import jax.numpy as jnp
+from jax import Array
 from simple_pytree import Pytree, dataclass
 
 
@@ -14,37 +15,37 @@ class LogitModel(Pytree, mutable=False):
     """Logit discrete choice model
 
     Attributes:
-        utility (jnp.ndarray): choice-specific utilities
-        scale (jnp.ndarray): scale parameter
-        n (jnp.ndarray): distribution of agents
+        utility (Array): choice-specific utilities
+        scale (Array): scale parameter
+        n (Array: distribution of agents
         outside_option (bool): indicator for whether outside option is included
         axis (int): axis that defines choices
 
     """
 
-    utility: jnp.ndarray
-    scale: jnp.ndarray
+    utility: Array
+    scale: Array
 
-    n: jnp.ndarray
+    n: Array
 
     outside_option: bool = True
     axis: int = 1
 
     @property
-    def adjustment(self) -> jnp.ndarray:
+    def adjustment(self) -> Array:
         # Set up adjustment factor for the logit model
         return jnp.ones_like(self.scale, dtype=float)
 
-    def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+    def ChoiceProbabilities(self, v: Array) -> tuple[Array, Array]:
         """Compute the logit choice probabilities for inside and outside options
 
         Args:
-            v (jnp.ndarray): choice-specific payoffs
+            v (Array): choice-specific payoffs
 
         Returns:
-        P_inside (jnp.ndarray):
+        P_inside (Array):
             choice probabilities of inside options.
-        P_outside (jnp.ndarray):
+        P_outside (Array):
             choice probabilities of outside option.
         """
         v_max = jnp.max(v, axis=self.axis, keepdims=True)
@@ -67,23 +68,23 @@ class NestedLogitModel(Pytree, mutable=False):
     """Nested logit discrete choice model
 
     Attributes:
-        utility (jnp.ndarray): choice-specific utilities
-        scale (jnp.ndarray): scale parameter
-        nest_index (jnp.ndarray): index of nest that the alternatives belong to
-        nest_parameter (jnp.ndarray): nesting parameter
-        n (jnp.ndarray): distribution of agents
+        utility (Array): choice-specific utilities
+        scale (Array): scale parameter
+        nest_index (Array): index of nest that the alternatives belong to
+        nest_parameter (Array): nesting parameter
+        n (Array): distribution of agents
         outside_option (bool): indicator for whether outside option is included
         axis (int): axis that defines choices
 
     """
 
-    utility: jnp.ndarray
-    scale: jnp.ndarray
+    utility: Array
+    scale: Array
 
-    nest_index: jnp.ndarray
-    nest_parameter: jnp.ndarray
+    nest_index: Array
+    nest_parameter: Array
 
-    n: jnp.ndarray
+    n: Array
 
     outside_option: bool = True
     axis: int = 1
@@ -93,7 +94,7 @@ class NestedLogitModel(Pytree, mutable=False):
         return self.nest_parameter.shape[1]
 
     @property
-    def nest_structure(self) -> jnp.ndarray:
+    def nest_structure(self) -> Array:
         # Set up matrix that indicate which nest each alternative belongs to
         index_of_nests = jnp.arange(self.number_of_nests)
         nesting_structur = jnp.expand_dims(
@@ -102,20 +103,20 @@ class NestedLogitModel(Pytree, mutable=False):
         return nesting_structur.astype(float)
 
     @property
-    def adjustment(self) -> jnp.ndarray:
+    def adjustment(self) -> Array:
         # Set up adjustment factor for the nested logit model
         return self.nest_parameter @ self.nest_structure.T
 
-    def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+    def ChoiceProbabilities(self, v: Array) -> tuple[Array, Array]:
         """Compute the nested logit choice probabilities for inside and outside options
 
         Args:
-            v (jnp.ndarray): choice-specific payoffs
+            v (Array): choice-specific payoffs
 
         Returns:
-        P_inside (jnp.ndarray):
+        P_inside (Array):
             choice probabilities of inside options.
-        P_outside (jnp.ndarray):
+        P_outside (Array):
             choice probabilities of outside option.
         """
         # Explanation einsum indexes:
@@ -158,42 +159,42 @@ class GeneralizedNestedLogitModel(Pytree, mutable=False):
     """Generalized nested logit discrete choice model
 
     Attributes:
-        utility (jnp.ndarray): choice-specific utilities
-        scale (jnp.ndarray): scale parameter
-        nest_share (jnp.ndarray): share that the alternatives belong to each nest
-        nest_parameter (jnp.ndarray): nesting parameter
-        n (jnp.ndarray): distribution of agents
+        utility (Array): choice-specific utilities
+        scale (Array): scale parameter
+        nest_share (Array): share that the alternatives belong to each nest
+        nest_parameter (Array): nesting parameter
+        n (Array): distribution of agents
         outside_option (bool): indicator for whether outside option is included
         axis (int): axis that defines choices
 
     """
 
-    utility: jnp.ndarray
-    scale: jnp.ndarray
+    utility: Array
+    scale: Array
 
-    nest_share: jnp.ndarray
-    nest_parameter: jnp.ndarray
+    nest_share: Array
+    nest_parameter: Array
 
-    n: jnp.ndarray
+    n: Array
 
     outside_option: bool = True
     axis: int = 1
 
     @property
-    def adjustment(self) -> jnp.ndarray:
+    def adjustment(self) -> Array:
         # Set up adjustment factor for the generalized nested logit model
         return jnp.min(self.nest_parameter, axis=self.axis, keepdims=True)
 
-    def ChoiceProbabilities(self, v: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+    def ChoiceProbabilities(self, v: Array) -> tuple[Array, Array]:
         """Compute the generalized nested logit choice probabilities for inside and outside options
 
         Args:
-            v (jnp.ndarray): choice-specific payoffs
+            v (Array): choice-specific payoffs
 
         Returns:
-        P_inside (jnp.ndarray):
+        P_inside (Array):
             choice probabilities of inside options.
-        P_outside (jnp.ndarray):
+        P_outside (Array):
             choice probabilities of outside option.
         """
 
